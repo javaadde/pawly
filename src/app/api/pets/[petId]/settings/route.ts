@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/db/mongoose';
+import Pet from '@/lib/models/Pet';
+
+// GET /api/pets/:petId/settings — PUBLIC endpoint used by widget.js
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ petId: string }> }
+) {
+  const { petId } = await params;
+
+  await connectDB();
+
+  const pet = await Pet.findById(petId).select(
+    'name petType brandColor greetingMessage personality position isActive allowedDomain'
+  );
+
+  if (!pet) {
+    return NextResponse.json({ error: 'Pet not found' }, { status: 404 });
+  }
+
+  if (!pet.isActive) {
+    return NextResponse.json({ error: 'Pet is inactive' }, { status: 403 });
+  }
+
+  // Return only safe public fields
+  return NextResponse.json({
+    id: pet._id.toString(),
+    name: pet.name,
+    petType: pet.petType,
+    brandColor: pet.brandColor,
+    greetingMessage: pet.greetingMessage,
+    personality: pet.personality,
+    position: pet.position,
+  });
+}
