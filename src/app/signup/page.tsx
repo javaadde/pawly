@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import heroBackground from '@/assets/images/background.png';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -54,97 +55,118 @@ export default function SignupPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: 'var(--dark-bg)', position: 'relative', overflow: 'hidden' }}>
-      {/* Orbs */}
-      <div style={{ position: 'absolute', top: '20%', right: '25%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '20%', left: '25%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    <main className="auth-page">
+      <section className="auth-hero" style={{ backgroundImage: `url(${heroBackground.src})` }}>
+        <div className="home-hero-overlay" />
 
-      <div style={{ width: '100%', maxWidth: 420, position: 'relative' }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <span style={{ fontSize: '2rem' }}>🐾</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>Pawly</span>
-            <span className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: 800 }}>AI</span>
+        <header className="home-hero-header">
+          <Link href="/" className="auth-brand-button">
+            Pawly AI
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginTop: '1.25rem' }}>Create your account</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.375rem' }}>Start for free, no credit card required</p>
-        </div>
-
-        <div className="card" style={{ padding: '2rem' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {error && (
-              <div className="alert alert-error">{error}</div>
-            )}
-
-            <div className="field">
-              <label className="label" htmlFor="name">Full name</label>
-              <input
-                id="name"
-                type="text"
-                className="input"
-                placeholder="John Smith"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-            </div>
-
-            <div className="field">
-              <label className="label" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                className="input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="field">
-              <label className="label" htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                className="input"
-                placeholder="Minimum 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
-              id="signup-submit"
-            >
-              {loading ? '🐾 Creating account...' : '🐾 Create free account'}
-            </button>
-          </form>
-
-          <div className="divider" />
-
-          <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Already have an account?{' '}
-            <Link href="/login" style={{ color: 'var(--purple-400)', textDecoration: 'none', fontWeight: 500 }}>
+          <nav className="home-hero-nav" aria-label="Primary">
+            <Link href="/login" className="auth-header-link">
               Sign in
             </Link>
-          </p>
-        </div>
+          </nav>
+        </header>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>← Back to homepage</Link>
-        </p>
-      </div>
-    </div>
+        <div className="auth-shell">
+          <aside className="auth-showcase auth-showcase-signup">
+            <div className="auth-showcase-copy">
+              <p className="auth-showcase-kicker">Launch fast</p>
+              <h2>Give your website a branded AI pet in minutes.</h2>
+              <p>
+                Create your account, customize your assistant, and bring the same warm hero-section energy into every visitor conversation.
+              </p>
+            </div>
+
+            <div className="auth-showcase-card">
+              <span className="auth-showcase-label">What you get</span>
+              <ul className="auth-showcase-list">
+                <li>Quick setup with one script snippet</li>
+                <li>Answer customer questions with your site knowledge</li>
+                <li>Capture more leads without adding extra tools</li>
+              </ul>
+            </div>
+          </aside>
+
+          <div className="auth-panel">
+            <div className="auth-heading auth-heading-left">
+              <h1>Create an account</h1>
+              <p>Start for free and set up your Pawly assistant with a dark, polished dashboard experience.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              {error && <div className="alert alert-error">{error}</div>}
+
+              <div className="field">
+                <label className="label" htmlFor="name">Your name</label>
+                <input
+                  id="name"
+                  type="text"
+                  className="input auth-input"
+                  placeholder="John Smith"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  autoComplete="name"
+                />
+              </div>
+
+              <div className="field">
+                <label className="label" htmlFor="email">Your email</label>
+                <input
+                  id="email"
+                  type="email"
+                  className="input auth-input"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="field">
+                <label className="label" htmlFor="password">Create password</label>
+                <input
+                  id="password"
+                  type="password"
+                  className="input auth-input"
+                  placeholder="Minimum 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="auth-submit"
+                disabled={loading}
+                id="signup-submit"
+              >
+                {loading ? 'Creating account...' : 'Create account'}
+              </button>
+            </form>
+
+            <div className="auth-divider">Already with Pawly?</div>
+
+            <p className="auth-footer auth-footer-left">
+              Sign in to manage your assistant, leads, and website conversations.{' '}
+              <Link href="/login" className="auth-link">
+                Sign in
+              </Link>
+            </p>
+
+            <p className="auth-back auth-back-left">
+              <Link href="/" className="auth-backlink">Back to homepage</Link>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

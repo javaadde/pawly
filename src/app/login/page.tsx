@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import heroBackground from '@/assets/images/background.png';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,82 +33,83 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: 'var(--dark-bg)', position: 'relative', overflow: 'hidden' }}>
-      {/* Orbs */}
-      <div style={{ position: 'absolute', top: '20%', left: '30%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '20%', right: '30%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    <main className="auth-page">
+      <section className="auth-hero" style={{ backgroundImage: `url(${heroBackground.src})` }}>
+        <div className="home-hero-overlay" />
 
-      <div style={{ width: '100%', maxWidth: 420, position: 'relative' }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '2rem' }}>🐾</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>Pawly</span>
-            <span className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: 800 }}>AI</span>
+        <header className="home-hero-header">
+          <Link href="/" className="auth-brand-button">
+            Pawly AI
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginTop: '1.25rem' }}>Welcome back</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.375rem' }}>Sign in to your dashboard</p>
-        </div>
-
-        <div className="card" style={{ padding: '2rem' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {error && (
-              <div className="alert alert-error">{error}</div>
-            )}
-
-            <div className="field">
-              <label className="label" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                className="input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="field">
-              <label className="label" htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                className="input"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
-              id="login-submit"
-            >
-              {loading ? '🐾 Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <div className="divider" />
-
-          <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" style={{ color: 'var(--purple-400)', textDecoration: 'none', fontWeight: 500 }}>
-              Sign up for free
+          <nav className="home-hero-nav" aria-label="Primary">
+            <Link href="/signup" className="auth-header-link">
+              Create account
             </Link>
-          </p>
-        </div>
+          </nav>
+        </header>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>← Back to homepage</Link>
-        </p>
-      </div>
-    </div>
+        <div className="auth-shell auth-shell-login">
+          <aside className="auth-showcase auth-showcase-login">
+            <div className="auth-showcase-copy auth-showcase-copy-login">
+              <p className="auth-showcase-kicker">You can easily</p>
+              <h2>Get back to your AI pet dashboard in seconds.</h2>
+            </div>
+          </aside>
+
+          <div className="auth-panel auth-panel-login">
+            <div className="auth-heading auth-heading-left">
+              <h1>Welcome back</h1>
+              <p>Access your dashboard, leads, and assistant settings from one place.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              {error && <div className="alert alert-error">{error}</div>}
+
+              <div className="field">
+                <label className="label" htmlFor="email">Your email</label>
+                <input
+                  id="email"
+                  type="email"
+                  className="input auth-input"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="field">
+                <label className="label" htmlFor="password">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  className="input auth-input"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <button type="submit" className="auth-submit" disabled={loading} id="login-submit">
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+
+            <div className="auth-divider auth-divider-centered">New to Pawly?</div>
+
+            <p className="auth-footer auth-footer-centered">
+              Create your account to launch your pet assistant in minutes.{' '}
+              <Link href="/signup" className="auth-link">Start for free</Link>
+            </p>
+            <p className="auth-back auth-back-centered">
+              <Link href="/" className="auth-backlink">Back to homepage</Link>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
