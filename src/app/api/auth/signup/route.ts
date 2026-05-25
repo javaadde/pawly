@@ -6,8 +6,10 @@ import User from '@/lib/models/User';
 export async function POST(req: NextRequest) {
   try {
     const { name, email, password } = await req.json();
+    const normalizedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-    if (!name || !email || !password) {
+    if (!normalizedName || !normalizedEmail || !password) {
       return NextResponse.json(
         { error: 'Name, email and password are required' },
         { status: 400 }
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       return NextResponse.json(
         { error: 'An account with this email already exists' },
@@ -33,8 +35,8 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: normalizedName,
+      email: normalizedEmail,
       passwordHash,
     });
 
@@ -50,6 +52,12 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Signup error:', error);
-    return NextResponse.json({ error: 'Failed to create account' }, { status: 500 });
+
+    const message =
+      error instanceof Error && error.message.startsWith('Database configuration error:')
+        ? error.message
+        : 'Failed to create account';
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -280,7 +280,8 @@ body {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 1.5rem;
   align-items: start;
-  margin-top: -2.5rem;
+  margin-top: 0;
+  padding-top: 4rem;
 }
 
 .home-section-copy {
