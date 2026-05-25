@@ -81,12 +81,23 @@ export default function EditPetPage() {
             </div>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <div className="field" style={{ flex: 1 }}>
+                <label className="label" htmlFor="edit-pet-type">Pet type</label>
+                <select id="edit-pet-type" className="input" value={form.petType || 'cat'} onChange={(e) => set('petType', e.target.value)} style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <option value="cat">Cat</option>
+                  <option value="dog">Dog</option>
+                  <option value="bunny">Bunny</option>
+                  <option value="robot">Robot</option>
+                </select>
+              </div>
+              <div className="field" style={{ flex: 1 }}>
                 <label className="label" htmlFor="edit-color">Brand color</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <input type="color" id="edit-color" value={form.brandColor || '#7C3AED'} onChange={(e) => set('brandColor', e.target.value)} />
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{form.brandColor}</span>
                 </div>
               </div>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
               <div className="field" style={{ flex: 1 }}>
                 <label className="label" htmlFor="edit-personality">Personality</label>
                 <select id="edit-personality" className="input" value={form.personality || 'friendly'} onChange={(e) => set('personality', e.target.value)} style={{ background: 'rgba(255,255,255,0.04)' }}>
@@ -114,6 +125,58 @@ export default function EditPetPage() {
               <input type="checkbox" id="edit-active" checked={form.isActive ?? true} onChange={(e) => set('isActive', e.target.checked)} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--purple-600)' }} />
               <label htmlFor="edit-active" style={{ color: 'white', fontSize: '0.9rem', cursor: 'pointer' }}>Pet is active (visible on website)</label>
             </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h2 style={{ fontWeight: 700, color: 'white', marginBottom: '1.25rem', fontSize: '1rem' }}>RAG settings</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <input
+                type="checkbox"
+                id="edit-rag-enabled"
+                checked={form.ragEnabled ?? false}
+                onChange={(e) => set('ragEnabled', e.target.checked)}
+                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--purple-600)' }}
+              />
+              <label htmlFor="edit-rag-enabled" style={{ color: 'white', fontSize: '0.9rem', cursor: 'pointer' }}>
+                Enable RAG mode for this pet
+              </label>
+            </div>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+              When disabled, Pawly answers by matching the visitor question against the saved knowledge directly. When enabled, it uses your API key and model to answer with AI from that knowledge context.
+            </p>
+
+            {form.ragEnabled ? (
+              <>
+                <div className="field">
+                  <label className="label" htmlFor="edit-rag-api-key">RAG API key</label>
+                  <input
+                    id="edit-rag-api-key"
+                    type="password"
+                    className="input"
+                    placeholder="Paste your OpenRouter / AI provider key"
+                    value={form.ragApiKey || ''}
+                    onChange={(e) => set('ragApiKey', e.target.value)}
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="label" htmlFor="edit-rag-model">RAG model</label>
+                  <input
+                    id="edit-rag-model"
+                    className="input"
+                    placeholder="openai/gpt-4o-mini"
+                    value={form.ragModel || 'openai/gpt-4o-mini'}
+                    onChange={(e) => set('ragModel', e.target.value)}
+                  />
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+                    Use a model supported by your provider. This is only used when RAG mode is enabled.
+                  </p>
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
 

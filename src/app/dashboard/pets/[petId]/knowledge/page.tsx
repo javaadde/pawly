@@ -5,11 +5,24 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { KnowledgeItem } from '@/types';
 
+const SUPPORTED_DOCUMENT_EXTENSIONS = ['txt', 'md', 'csv', 'json', 'html'];
+const MAX_DOCUMENT_CHARACTERS = 20000;
+
+function getFileExtension(fileName: string) {
+  const parts = fileName.split('.');
+  return parts.length > 1 ? parts.pop()?.toLowerCase() || '' : '';
+}
+
+function toDocumentTitle(fileName: string) {
+  return fileName.replace(/\.[^.]+$/, '');
+}
+
 export default function KnowledgePage() {
   const { petId } = useParams<{ petId: string }>();
   const [items, setItems] = useState<KnowledgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({ title: '', content: '', sourceType: 'manual' });
@@ -53,6 +66,56 @@ export default function KnowledgePage() {
       body: JSON.stringify({ itemId: id }),
     });
     load();
+  }
+
+  async function uploadDocuments(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+
+    if (files.length === 0) return;
+
+    setUploading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      for (const file of files) {
+        const extension = getFileExtension(file.name);
+
+        if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(extension)) {
+          throw new Error(`Unsupported file type for ${file.name}. Use ${SUPPORTED_DOCUMENT_EXTENSIONS.join(', ')}.`);
+        }
+
+        const rawText = await file.text();
+        const content = rawText.trim();
+
+        if (!content) {
+          throw new Error(`${file.name} is empty.`);
+        }
+
+        const res = await fetch(`/api/knowledge/${petId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: toDocumentTitle(file.name),
+            content: content.slice(0, MAX_DOCUMENT_CHARACTERS),
+            sourceType: 'document',
+            fileName: file.name,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error((await res.json()).error || `Failed to upload ${file.name}`);
+        }
+      }
+
+      setSuccess(`Uploaded ${files.length} document${files.length > 1 ? 's' : ''} for training.`);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload documents');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   }
 
   if (loading) return <div style={{ padding: '2.5rem', color: 'var(--text-secondary)' }}>Loading...</div>;
@@ -99,6 +162,32 @@ export default function KnowledgePage() {
         </form>
       </div>
 
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontWeight: 700, color: 'white', marginBottom: '0.75rem', fontSize: '1rem' }}>Upload training documents</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          Upload text-based documents and Pawly will save them as training knowledge for this pet.
+        </p>
+        <div className="field">
+          <label className="label" htmlFor="knowledge-documents">Documents</label>
+          <input
+            id="knowledge-documents"
+            type="file"
+            multiple
+            accept=".txt,.md,.csv,.json,.html,text/plain,text/markdown,text/csv,application/json,text/html"
+            onChange={uploadDocuments}
+            disabled={uploading}
+            className="input"
+            style={{ padding: '0.75rem' }}
+          />
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Supported for now: .txt, .md, .csv, .json, .html. Large files are trimmed to the first {MAX_DOCUMENT_CHARACTERS.toLocaleString()} characters.
+          </p>
+        </div>
+        <div style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          {uploading ? 'Uploading documents...' : 'Each uploaded file becomes a saved knowledge item.'}
+        </div>
+      </div>
+
       <h2 style={{ fontWeight: 700, color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>Saved knowledge ({items.length} items)</h2>
       {items.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
@@ -113,6 +202,11 @@ export default function KnowledgePage() {
                   <p style={{ fontWeight: 600, color: 'white', fontSize: '0.9375rem' }}>{item.title}</p>
                   <span style={{ padding: '0.125rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', background: 'rgba(168,85,247,0.15)', color: 'var(--purple-400)', border: '1px solid rgba(168,85,247,0.2)' }}>{item.sourceType}</span>
                 </div>
+                {item.fileName ? (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                    Source file: {item.fileName}
+                  </p>
+                ) : null}
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.content}</p>
               </div>
               <button onClick={() => deleteItem(item._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.125rem', padding: '0.25rem', borderRadius: '0.375rem', flexShrink: 0 }} id={`delete-k-${item._id}`}>🗑️</button>

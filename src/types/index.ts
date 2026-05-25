@@ -1,6 +1,6 @@
 // Shared TypeScript types across the Pawly application
 
-export type PetType = 'cat' | 'dog' | 'bunny';
+export type PetType = 'cat' | 'dog' | 'bunny' | 'robot';
 export type Personality = 'friendly' | 'professional' | 'funny' | 'calm';
 export type Position = 'bottom-right' | 'bottom-left';
 export type ActionType = 'scroll_to' | 'highlight' | 'open_link';
@@ -18,6 +18,9 @@ export interface Pet {
   position: Position;
   allowedDomain: string | null;
   isActive: boolean;
+  ragEnabled: boolean;
+  ragApiKey: string | null;
+  ragModel: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,7 +30,8 @@ export interface KnowledgeItem {
   petId: string;
   title: string;
   content: string;
-  sourceType: 'manual' | 'faq';
+  sourceType: 'manual' | 'faq' | 'document';
+  fileName?: string | null;
   createdAt: string;
   updatedAt: string;
 }

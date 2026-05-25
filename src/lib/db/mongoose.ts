@@ -7,13 +7,21 @@ function getMongoUri() {
     throw new Error('Database configuration error: MONGODB_URI is missing');
   }
 
-  if (MONGODB_URI.includes('<user>') || MONGODB_URI.includes('<pass>')) {
+  const mongoUri = MONGODB_URI.trim();
+
+  if (mongoUri.includes('<user>') || mongoUri.includes('<pass>')) {
     throw new Error(
       'Database configuration error: replace the placeholder MONGODB_URI credentials in .env.local'
     );
   }
 
-  return MONGODB_URI;
+  if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+    throw new Error(
+      'Database configuration error: MONGODB_URI must start with "mongodb://" or "mongodb+srv://"'
+    );
+  }
+
+  return mongoUri;
 }
 
 interface MongooseCache {

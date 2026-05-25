@@ -224,6 +224,53 @@ body {
   50%       { transform: translateY(-6px); }
 }
 
+@keyframes home-pet-roam {
+  0% { transform: translateX(-32%); }
+  100% { transform: translateX(32%); }
+}
+
+@keyframes home-pet-face {
+  0%, 49.999% { transform: scaleX(1); }
+  50%, 100% { transform: scaleX(-1); }
+}
+
+@keyframes home-pet-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes home-pet-shadow-drift {
+  0%, 100% { transform: translateX(0) scaleX(1); opacity: 0.5; }
+  50% { transform: translateX(0) scaleX(0.92); opacity: 0.72; }
+}
+
+@keyframes home-pet-leg-front {
+  0%, 100% { transform: rotate(14deg); }
+  50% { transform: rotate(-14deg); }
+}
+
+@keyframes home-pet-leg-back {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+
+@keyframes home-pet-tail-wag {
+  0%, 100% { transform: rotate(24deg); }
+  50% { transform: rotate(50deg); }
+}
+
+@keyframes home-pet-ear-flick {
+  0%, 100% { transform: rotate(0deg); }
+  18% { transform: rotate(-8deg); }
+  24% { transform: rotate(6deg); }
+  30% { transform: rotate(0deg); }
+}
+
+@keyframes home-pet-blink {
+  0%, 44%, 100% { transform: scaleY(1); }
+  46%, 48% { transform: scaleY(0.18); }
+}
+
 .animate-float     { animation: float 3s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-fade-up   { animation: fadeInUp 0.5s ease forwards; }
@@ -1228,6 +1275,235 @@ body {
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.44);
 }
 
+.home-hero-stage {
+  width: min(100%, 58rem);
+  margin-top: 2.5rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.8rem;
+  background: linear-gradient(180deg, rgba(14, 14, 14, 0.78), rgba(8, 8, 8, 0.92));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.home-hero-stage-copy {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+}
+
+.home-hero-stage-copy span {
+  color: rgba(255, 196, 171, 0.82);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-hero-stage-copy p {
+  max-width: 32rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.98rem;
+}
+
+.home-hero-stage-lane {
+  position: relative;
+  margin-top: 1.4rem;
+  min-height: 13.5rem;
+  border-radius: 1.35rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 124, 61, 0.14), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
+.home-hero-stage-lane::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 2rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.home-hero-stage-lane::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 1rem;
+  height: 4.8rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(255, 117, 56, 0.22), rgba(255, 117, 56, 0.05) 48%, transparent 74%);
+  filter: blur(18px);
+}
+
+.home-live-pet-runner {
+  position: absolute;
+  left: 50%;
+  bottom: 2rem;
+  z-index: 1;
+  animation: home-pet-roam 12s ease-in-out infinite alternate;
+}
+
+.home-live-pet-shadow-runner {
+  position: absolute;
+  left: 50%;
+  bottom: 1.05rem;
+  animation: home-pet-roam 12s ease-in-out infinite alternate;
+}
+
+.home-live-pet-facing {
+  animation: home-pet-face 24s steps(1, end) infinite;
+}
+
+.home-live-pet {
+  position: relative;
+  width: clamp(8rem, 16vw, 10rem);
+  height: 7rem;
+  animation: home-pet-bob 1.3s ease-in-out infinite;
+}
+
+.home-live-pet-ears {
+  position: absolute;
+  top: 0.4rem;
+  left: 2.25rem;
+  width: 3.4rem;
+  height: 1.7rem;
+}
+
+.home-live-pet-ear {
+  position: absolute;
+  top: 0;
+  width: 1.1rem;
+  height: 1.55rem;
+  border-radius: 999px 999px 42% 42%;
+  background: linear-gradient(180deg, #3b3a42, #17161b);
+  transform-origin: bottom center;
+  animation: home-pet-ear-flick 5s ease-in-out infinite;
+}
+
+.home-live-pet-ear-left {
+  left: 0.4rem;
+  transform: rotate(-18deg);
+}
+
+.home-live-pet-ear-right {
+  right: 0.4rem;
+  transform: rotate(18deg);
+  animation-delay: 0.35s;
+}
+
+.home-live-pet-tail {
+  position: absolute;
+  right: 0.8rem;
+  top: 2.75rem;
+  width: 2.35rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f2e35, #16151a);
+  transform-origin: left center;
+  animation: home-pet-tail-wag 0.8s ease-in-out infinite;
+}
+
+.home-live-pet-body {
+  position: absolute;
+  left: 1.5rem;
+  top: 1.5rem;
+  width: 5.4rem;
+  height: 3.9rem;
+  border-radius: 48% 50% 44% 44%;
+  background: linear-gradient(180deg, #4d4a58, #23202a 68%, #16141a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.home-live-pet-face {
+  position: absolute;
+  left: 0.9rem;
+  top: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.home-live-pet-eye {
+  width: 0.38rem;
+  height: 0.48rem;
+  border-radius: 999px;
+  background: #fff6ef;
+  transform-origin: center;
+  animation: home-pet-blink 4.5s ease-in-out infinite;
+}
+
+.home-live-pet-nose {
+  position: absolute;
+  left: 50%;
+  top: 0.6rem;
+  width: 0.62rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #ffb18c;
+  transform: translateX(-50%);
+}
+
+.home-live-pet-belly {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 0.55rem;
+  width: 2.5rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: rgba(255, 240, 230, 0.9);
+}
+
+.home-live-pet-legs {
+  position: absolute;
+  left: 2.2rem;
+  bottom: 0;
+  display: flex;
+  gap: 1.2rem;
+}
+
+.home-live-pet-leg {
+  width: 0.7rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #27252c, #131118);
+  transform-origin: top center;
+}
+
+.home-live-pet-leg-front {
+  animation: home-pet-leg-front 0.7s ease-in-out infinite;
+}
+
+.home-live-pet-leg-back {
+  animation: home-pet-leg-back 0.7s ease-in-out infinite;
+}
+
+.home-live-pet-shadow {
+  width: clamp(6.5rem, 14vw, 8rem);
+  height: 1rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.36);
+  transform: translateX(-50%);
+  filter: blur(8px);
+  animation: home-pet-shadow-drift 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-live-pet-runner,
+  .home-live-pet-facing,
+  .home-live-pet,
+  .home-live-pet-ear,
+  .home-live-pet-tail,
+  .home-live-pet-eye,
+  .home-live-pet-leg,
+  .home-live-pet-shadow {
+    animation: none;
+  }
+}
+
 @media (max-width: 720px) {
   .home-hero {
     padding: 1.25rem;
@@ -1245,6 +1521,14 @@ body {
   .home-hero-button {
     width: 100%;
     max-width: 18rem;
+  }
+
+  .home-hero-stage {
+    padding: 1rem;
+  }
+
+  .home-hero-stage-lane {
+    min-height: 11.5rem;
   }
 }
 

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // ── Bootstrap ──────────────────────────────────────────────
+  // -- Bootstrap ------------------------------------------------
   const scriptEl = document.currentScript || document.querySelector('script[data-pet-id]');
   if (!scriptEl) return;
 
@@ -11,11 +11,18 @@
   const API_BASE = scriptEl.src.replace('/widget.js', '');
   let petConfig = null;
   let isOpen = false;
+  let dragState = null;
+  let suppressClick = false;
+  let widgetPosition = null;
+  let roamRaf = null;
+  let roamDirection = 1;
+  let roamEnabled = true;
+  let lastRoamFrame = 0;
   let visitorId = localStorage.getItem('pawly_visitor_id') || ('visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
   let conversationId = null;
   localStorage.setItem('pawly_visitor_id', visitorId);
 
-  // ── Fetch pet config ───────────────────────────────────────
+  // -- Fetch pet config -----------------------------------------
   async function init() {
     try {
       const res = await fetch(API_BASE + '/api/pets/' + PET_ID + '/settings');
@@ -27,7 +34,7 @@
     }
   }
 
-  // ── SVG Pet ────────────────────────────────────────────────
+  // -- SVG Pet --------------------------------------------------
   function petSVG(color, size) {
     size = size || 70;
     return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
@@ -59,38 +66,75 @@
     </svg>`;
   }
 
-  // ── Styles ─────────────────────────────────────────────────
-  function buildCSS(color, position) {
-    const isRight = position !== 'bottom-left';
-    const side = isRight ? 'right:20px' : 'left:20px';
+  function petMarkup(type, color, size) {
+    if (type === 'robot') {
+      return `<div class="pawly-pixel-pet" style="--pawly-pet-size:${size}px;--pawly-pet-color:${color};">
+        <div class="pawly-pixel-pet-inner">
+          <div class="pawly-pixel-pet-head">
+            <span class="pawly-pixel-pet-shadow"></span>
+            <span class="pawly-pixel-pet-helmet"></span>
+            <span class="pawly-pixel-pet-faceplate">
+              <span class="pawly-pixel-pet-eye pawly-pixel-pet-eye-left"></span>
+              <span class="pawly-pixel-pet-eye pawly-pixel-pet-eye-right"></span>
+              <span class="pawly-pixel-pet-mouth"></span>
+            </span>
+            <span class="pawly-pixel-pet-ear"></span>
+          </div>
+          <div class="pawly-pixel-pet-torso"></div>
+          <div class="pawly-pixel-pet-legs">
+            <span class="pawly-pixel-pet-leg pawly-pixel-pet-leg-front"></span>
+            <span class="pawly-pixel-pet-leg pawly-pixel-pet-leg-back"></span>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    return petSVG(color, size);
+  }
+
+  // -- Styles ---------------------------------------------------
+  function buildCSS(color) {
     return `
       #pawly-root { all: initial; }
       #pawly-root * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       #pawly-btn {
-        position: fixed; bottom: 20px; ${side}; z-index: 2147483647;
+        position: fixed; z-index: 2147483647;
         width: 76px; height: 76px; cursor: pointer; border: none; background: none; padding: 0;
         filter: drop-shadow(0 4px 16px ${color}66);
-        animation: pawly-float 3s ease-in-out infinite;
         transition: transform 0.2s ease;
+        touch-action: none;
+        user-select: none;
       }
-      #pawly-btn:hover { transform: scale(1.1); }
+      #pawly-btn:hover { transform: scale(1.06); }
+      #pawly-btn[data-roaming='true'] .pawly-pixel-pet-inner {
+        animation: pawly-pixel-pet-bob 0.52s steps(1, end) infinite;
+      }
+      #pawly-btn[data-roaming='true'] .pawly-pixel-pet-leg-front {
+        animation: pawly-pixel-leg-front 0.32s steps(1, end) infinite;
+      }
+      #pawly-btn[data-roaming='true'] .pawly-pixel-pet-leg-back {
+        animation: pawly-pixel-leg-back 0.32s steps(1, end) infinite;
+      }
+      #pawly-btn[data-facing='left'] .pawly-pixel-pet-inner {
+        transform: scaleX(-1);
+      }
       #pawly-bubble {
-        position: fixed; bottom: 110px; ${side}; z-index: 2147483647;
+        position: fixed; z-index: 2147483647;
         background: #111118; color: white; border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 16px 16px ${isRight ? '0' : '16px'} ${isRight ? '16px' : '0'};
+        border-radius: 16px;
         padding: 10px 14px; font-size: 13px; max-width: 220px; line-height: 1.4;
         box-shadow: 0 8px 30px rgba(0,0,0,0.4); cursor: pointer;
         animation: pawly-fadein 0.4s ease;
       }
       #pawly-bubble::after {
         content: ''; position: absolute; bottom: -8px;
-        ${isRight ? 'right: 16px' : 'left: 16px'};
+        right: 16px;
         width: 0; height: 0;
         border-left: 8px solid transparent; border-right: 8px solid transparent;
         border-top: 8px solid #111118;
       }
       #pawly-panel {
-        position: fixed; bottom: 110px; ${side}; z-index: 2147483647;
+        position: fixed; z-index: 2147483647;
         width: 360px; height: 520px; background: #0d0d14; border-radius: 20px;
         border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column;
         overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
@@ -163,16 +207,304 @@
       @keyframes pawly-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
       @keyframes pawly-fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       @keyframes pawly-slidein { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes pawly-pixel-pet-bob { 0%,100%{translate:0 0} 50%{translate:0 -2px} }
+      @keyframes pawly-pixel-leg-front { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+      @keyframes pawly-pixel-leg-back { 0%,100%{transform:translateX(4px)} 50%{transform:translateX(0)} }
+      .pawly-pixel-pet {
+        width: var(--pawly-pet-size);
+        height: var(--pawly-pet-size);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .pawly-pixel-pet-inner {
+        position: relative;
+        width: calc(var(--pawly-pet-size) * 0.78);
+        height: calc(var(--pawly-pet-size) * 0.92);
+        transform-origin: center bottom;
+      }
+      .pawly-pixel-pet-head {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: calc(var(--pawly-pet-size) * 0.52);
+        height: calc(var(--pawly-pet-size) * 0.52);
+        transform: translateX(-50%);
+        background: #f4e8bd;
+        border: calc(var(--pawly-pet-size) * 0.08) solid #151515;
+        box-shadow: inset calc(var(--pawly-pet-size) * -0.08) 0 0 #d6ca94;
+      }
+      .pawly-pixel-pet-shadow {
+        position: absolute;
+        left: calc(var(--pawly-pet-size) * -0.12);
+        top: calc(var(--pawly-pet-size) * 0.12);
+        width: calc(var(--pawly-pet-size) * 0.1);
+        height: calc(var(--pawly-pet-size) * 0.26);
+        background: #101010;
+      }
+      .pawly-pixel-pet-helmet {
+        position: absolute;
+        inset: calc(var(--pawly-pet-size) * 0.05);
+        background: #223333;
+      }
+      .pawly-pixel-pet-faceplate {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: calc(var(--pawly-pet-size) * 0.26);
+        height: calc(var(--pawly-pet-size) * 0.18);
+        transform: translate(-50%, -35%);
+        background: #446f6c;
+      }
+      .pawly-pixel-pet-eye,
+      .pawly-pixel-pet-mouth {
+        position: absolute;
+        background: #f0e45f;
+      }
+      .pawly-pixel-pet-eye {
+        top: calc(var(--pawly-pet-size) * 0.02);
+        width: calc(var(--pawly-pet-size) * 0.05);
+        height: calc(var(--pawly-pet-size) * 0.05);
+      }
+      .pawly-pixel-pet-eye-left { left: calc(var(--pawly-pet-size) * 0.03); }
+      .pawly-pixel-pet-eye-right { right: calc(var(--pawly-pet-size) * 0.03); }
+      .pawly-pixel-pet-mouth {
+        left: 50%;
+        bottom: calc(var(--pawly-pet-size) * 0.02);
+        width: calc(var(--pawly-pet-size) * 0.12);
+        height: calc(var(--pawly-pet-size) * 0.04);
+        transform: translateX(-50%);
+      }
+      .pawly-pixel-pet-ear {
+        position: absolute;
+        right: calc(var(--pawly-pet-size) * -0.04);
+        top: calc(var(--pawly-pet-size) * 0.08);
+        width: calc(var(--pawly-pet-size) * 0.06);
+        height: calc(var(--pawly-pet-size) * 0.18);
+        background: #f4f4f4;
+      }
+      .pawly-pixel-pet-torso {
+        position: absolute;
+        left: 50%;
+        top: calc(var(--pawly-pet-size) * 0.58);
+        width: calc(var(--pawly-pet-size) * 0.18);
+        height: calc(var(--pawly-pet-size) * 0.2);
+        transform: translateX(-50%);
+        background: #f8edc3;
+        border: calc(var(--pawly-pet-size) * 0.05) solid #151515;
+      }
+      .pawly-pixel-pet-legs {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: calc(var(--pawly-pet-size) * 0.3);
+        height: calc(var(--pawly-pet-size) * 0.22);
+        transform: translateX(-50%);
+      }
+      .pawly-pixel-pet-leg {
+        position: absolute;
+        bottom: 0;
+        width: calc(var(--pawly-pet-size) * 0.08);
+        height: calc(var(--pawly-pet-size) * 0.18);
+        background: #151515;
+      }
+      .pawly-pixel-pet-leg::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: calc(var(--pawly-pet-size) * 0.12);
+        height: calc(var(--pawly-pet-size) * 0.04);
+        background: #151515;
+      }
+      .pawly-pixel-pet-leg-front { left: calc(var(--pawly-pet-size) * 0.05); }
+      .pawly-pixel-pet-leg-back { right: calc(var(--pawly-pet-size) * 0.05); }
       @media (max-width: 420px) {
-        #pawly-panel { width: calc(100vw - 24px); ${isRight ? 'right:12px' : 'left:12px'}; border-radius: 16px; }
+        #pawly-panel { width: min(360px, calc(100vw - 24px)); border-radius: 16px; }
       }
     `;
   }
 
-  // ── Build Widget HTML ─────────────────────────────────────
+  function getStorageKey() {
+    return 'pawly_widget_position_' + PET_ID;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function getDefaultPosition(position) {
+    const margin = 20;
+    const btnSize = 76;
+    const isRight = position !== 'bottom-left';
+
+    return {
+      left: isRight ? window.innerWidth - btnSize - margin : margin,
+      top: window.innerHeight - btnSize - margin,
+    };
+  }
+
+  function loadWidgetPosition(position) {
+    try {
+      const saved = localStorage.getItem(getStorageKey());
+      if (!saved) return getDefaultPosition(position);
+
+      const parsed = JSON.parse(saved);
+      if (typeof parsed.left !== 'number' || typeof parsed.top !== 'number') {
+        return getDefaultPosition(position);
+      }
+
+      return parsed;
+    } catch {
+      return getDefaultPosition(position);
+    }
+  }
+
+  function saveWidgetPosition() {
+    if (!widgetPosition) return;
+    localStorage.setItem(getStorageKey(), JSON.stringify(widgetPosition));
+  }
+
+  function updateWidgetPosition() {
+    const root = document.getElementById('pawly-root');
+    if (!root || !root.shadowRoot || !widgetPosition) return;
+
+    const btn = root.shadowRoot.getElementById('pawly-btn');
+    const bubble = root.shadowRoot.getElementById('pawly-bubble');
+    const panel = root.shadowRoot.getElementById('pawly-panel');
+    if (!btn || !bubble || !panel) return;
+
+    const btnSize = 76;
+    const gap = 14;
+    const panelWidth = Math.min(360, window.innerWidth - 24);
+    const panelHeight = 520;
+    const bubbleWidth = Math.min(220, Math.max(180, window.innerWidth - 40));
+
+    const maxLeft = Math.max(12, window.innerWidth - btnSize - 12);
+    const maxTop = Math.max(12, window.innerHeight - btnSize - 12);
+
+    widgetPosition.left = clamp(widgetPosition.left, 12, maxLeft);
+    widgetPosition.top = clamp(widgetPosition.top, 12, maxTop);
+
+    btn.style.left = widgetPosition.left + 'px';
+    btn.style.top = widgetPosition.top + 'px';
+
+    const panelLeft = clamp(widgetPosition.left + btnSize - panelWidth, 12, window.innerWidth - panelWidth - 12);
+    const panelTop = clamp(widgetPosition.top - panelHeight - gap, 12, Math.max(12, window.innerHeight - panelHeight - 12));
+    panel.style.left = panelLeft + 'px';
+    panel.style.top = panelTop + 'px';
+
+    const bubbleLeft = clamp(widgetPosition.left + btnSize - bubbleWidth, 12, window.innerWidth - bubbleWidth - 12);
+    const bubbleTop = clamp(widgetPosition.top - 56, 12, window.innerHeight - 60);
+    bubble.style.left = bubbleLeft + 'px';
+    bubble.style.top = bubbleTop + 'px';
+  }
+
+  function setRoamingState(active) {
+    const root = document.getElementById('pawly-root');
+    const btn = root && root.shadowRoot ? root.shadowRoot.getElementById('pawly-btn') : null;
+    if (!btn) return;
+
+    btn.dataset.roaming = active ? 'true' : 'false';
+    btn.dataset.facing = roamDirection < 0 ? 'left' : 'right';
+
+    if (petConfig.petType !== 'robot') {
+      btn.style.animation = active ? 'pawly-float 3s ease-in-out infinite' : 'none';
+    }
+  }
+
+  function stopRoaming() {
+    roamEnabled = false;
+    lastRoamFrame = 0;
+    if (roamRaf) {
+      cancelAnimationFrame(roamRaf);
+      roamRaf = null;
+    }
+    setRoamingState(false);
+  }
+
+  function roamStep(timestamp) {
+    if (!roamEnabled || isOpen || dragState || !widgetPosition) {
+      roamRaf = null;
+      return;
+    }
+
+    if (!lastRoamFrame) lastRoamFrame = timestamp;
+    const delta = timestamp - lastRoamFrame;
+    lastRoamFrame = timestamp;
+    const speed = window.innerWidth < 720 ? 0.06 : 0.09;
+    const btnSize = 76;
+    const minLeft = 12;
+    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 12);
+
+    widgetPosition.left += roamDirection * delta * speed;
+    if (widgetPosition.left <= minLeft) {
+      widgetPosition.left = minLeft;
+      roamDirection = 1;
+    } else if (widgetPosition.left >= maxLeft) {
+      widgetPosition.left = maxLeft;
+      roamDirection = -1;
+    }
+
+    widgetPosition.top = Math.max(12, window.innerHeight - btnSize - 20);
+    setRoamingState(true);
+    updateWidgetPosition();
+    roamRaf = window.requestAnimationFrame(roamStep);
+  }
+
+  function startRoaming() {
+    if (!roamEnabled || isOpen || dragState || roamRaf) return;
+    setRoamingState(true);
+    roamRaf = window.requestAnimationFrame(roamStep);
+  }
+
+  function startDrag(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    stopRoaming();
+    const point = e.touches ? e.touches[0] : e;
+    dragState = {
+      pointerX: point.clientX,
+      pointerY: point.clientY,
+      left: widgetPosition.left,
+      top: widgetPosition.top,
+      moved: false,
+    };
+  }
+
+  function moveDrag(e) {
+    if (!dragState) return;
+
+    const point = e.touches ? e.touches[0] : e;
+    const deltaX = point.clientX - dragState.pointerX;
+    const deltaY = point.clientY - dragState.pointerY;
+
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+      dragState.moved = true;
+    }
+
+    widgetPosition.left = dragState.left + deltaX;
+    widgetPosition.top = dragState.top + deltaY;
+    updateWidgetPosition();
+
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function endDrag() {
+    if (!dragState) return false;
+    const moved = dragState.moved;
+    dragState = null;
+    suppressClick = moved;
+    saveWidgetPosition();
+    setRoamingState(false);
+    return moved;
+  }
+
+  // -- Build Widget HTML ---------------------------------------
   function injectWidget() {
     const color = petConfig.brandColor || '#7C3AED';
     const position = petConfig.position || 'bottom-right';
+    widgetPosition = loadWidgetPosition(position);
 
     // Shadow DOM container
     const host = document.createElement('div');
@@ -182,7 +514,7 @@
 
     // Stylesheet
     const style = document.createElement('style');
-    style.textContent = buildCSS(color, position);
+    style.textContent = buildCSS(color);
     shadow.appendChild(style);
 
     // Greeting bubble
@@ -197,8 +529,17 @@
     const btn = document.createElement('button');
     btn.id = 'pawly-btn';
     btn.setAttribute('aria-label', 'Chat with ' + petConfig.name);
-    btn.innerHTML = petSVG(color, 70);
-    btn.onclick = () => togglePanel();
+    btn.innerHTML = petMarkup(petConfig.petType, color, 70);
+    btn.onmousedown = startDrag;
+    btn.ontouchstart = startDrag;
+    btn.onclick = (e) => {
+      if (suppressClick) {
+        suppressClick = false;
+        e.preventDefault();
+        return;
+      }
+      togglePanel();
+    };
     shadow.appendChild(btn);
 
     // Chat panel
@@ -207,7 +548,7 @@
     panel.style.display = 'none';
     panel.innerHTML = `
       <div id="pawly-header">
-        ${petSVG(color === '#ffffff' ? '#ccc' : 'white', 36)}
+        ${petMarkup(petConfig.petType, color === '#ffffff' ? '#ccc' : 'white', 36)}
         <div>
           <div id="pawly-header-name">${petConfig.name}</div>
           <div id="pawly-header-status">● Online</div>
@@ -242,6 +583,14 @@
 
     // Show greeting on open
     addBotMessage(petConfig.greetingMessage, 'happy');
+    updateWidgetPosition();
+    startRoaming();
+    window.addEventListener('mousemove', moveDrag);
+    window.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+    window.addEventListener('touchcancel', endDrag);
+    window.addEventListener('resize', updateWidgetPosition);
   }
 
   function getPanel() { return document.getElementById('pawly-root').shadowRoot.getElementById('pawly-panel'); }
@@ -255,6 +604,12 @@
     const bubble = document.getElementById('pawly-root').shadowRoot.getElementById('pawly-bubble');
     panel.style.display = isOpen ? 'flex' : 'none';
     if (bubble) bubble.style.display = 'none';
+    if (isOpen) {
+      stopRoaming();
+    } else {
+      roamEnabled = true;
+      startRoaming();
+    }
     if (isOpen) { getInput().focus(); scrollToBottom(); }
   }
 
@@ -270,7 +625,7 @@
     const row = document.createElement('div');
     row.className = 'pawly-msg bot';
     row.innerHTML = `
-      <div class="pawly-avatar">${petSVG(color, 22)}</div>
+      <div class="pawly-avatar">${petMarkup(petConfig.petType, color, 22)}</div>
       <div class="pawly-bubble-text">${escapeHtml(text)}</div>
     `;
     msgs.appendChild(row);
@@ -296,7 +651,7 @@
     row.className = 'pawly-msg bot';
     row.id = 'pawly-thinking';
     row.innerHTML = `
-      <div class="pawly-avatar">${petSVG(petConfig.brandColor || '#7C3AED', 22)}</div>
+      <div class="pawly-avatar">${petMarkup(petConfig.petType, petConfig.brandColor || '#7C3AED', 22)}</div>
       <div class="pawly-bubble-text pawly-thinking">
         <div class="pawly-dot"></div><div class="pawly-dot"></div><div class="pawly-dot"></div>
       </div>
@@ -314,6 +669,10 @@
   function setPetEmotion(emotion) {
     const btn = document.getElementById('pawly-root').shadowRoot.getElementById('pawly-btn');
     if (!btn) return;
+    if (petConfig.petType === 'robot') {
+      btn.dataset.roaming = 'false';
+      return;
+    }
     btn.style.animation = 'none';
     void btn.offsetWidth;
     const anims = {
@@ -425,7 +784,7 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Start ──────────────────────────────────────────────────
+  // -- Start ----------------------------------------------------
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

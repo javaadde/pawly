@@ -33,11 +33,23 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
 
   const body = await req.json();
-  const { name, petType, brandColor, greetingMessage, personality, position, allowedDomain, isActive } = body;
+  const { name, petType, brandColor, greetingMessage, personality, position, allowedDomain, isActive, ragEnabled, ragApiKey, ragModel } = body;
 
   const updated = await Pet.findByIdAndUpdate(
     petId,
-    { name, petType, brandColor, greetingMessage, personality, position, allowedDomain, isActive },
+    {
+      name,
+      petType,
+      brandColor,
+      greetingMessage,
+      personality,
+      position,
+      allowedDomain,
+      isActive,
+      ragEnabled: Boolean(ragEnabled),
+      ragApiKey: ragApiKey?.trim() || null,
+      ragModel: ragModel?.trim() || 'openai/gpt-4o-mini',
+    },
     { new: true, runValidators: true }
   );
 

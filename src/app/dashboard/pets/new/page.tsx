@@ -7,6 +7,7 @@ const PET_TYPES = [
   { value: 'cat', label: 'Cat 🐱', emoji: '🐱' },
   { value: 'dog', label: 'Dog 🐶', emoji: '🐶' },
   { value: 'bunny', label: 'Bunny 🐰', emoji: '🐰' },
+  { value: 'robot', label: 'Robot 🤖', emoji: '🤖' },
 ];
 
 const PERSONALITIES = [

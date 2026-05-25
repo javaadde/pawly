@@ -5,12 +5,13 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export async function chatWithAI(
   systemPrompt: string,
   userMessage: string,
-  conversationHistory: { role: 'user' | 'assistant'; content: string }[] = []
+  conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [],
+  options?: { apiKey?: string | null; model?: string | null }
 ): Promise<ChatResponse> {
-  const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = options?.model?.trim() || process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
+  const apiKey = options?.apiKey?.trim() || process.env.OPENROUTER_API_KEY;
 
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'your-openrouter-key-here') {
     throw new Error('OPENROUTER_API_KEY is not configured');
   }
 

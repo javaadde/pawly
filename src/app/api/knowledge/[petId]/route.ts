@@ -30,14 +30,20 @@ export async function POST(req: NextRequest, { params }: Params) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, content, sourceType } = await req.json();
+  const { title, content, sourceType, fileName } = await req.json();
   if (!title || !content) return NextResponse.json({ error: 'Title and content required' }, { status: 400 });
 
   await connectDB();
   const pet = await verifyOwnership(petId, session.user.id);
   if (!pet) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const item = await KnowledgeBase.create({ petId, title, content, sourceType: sourceType || 'manual' });
+  const item = await KnowledgeBase.create({
+    petId,
+    title,
+    content,
+    sourceType: sourceType || 'manual',
+    fileName: fileName || null,
+  });
   return NextResponse.json({ item }, { status: 201 });
 }
 

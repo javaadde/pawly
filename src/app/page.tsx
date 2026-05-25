@@ -36,6 +36,42 @@ export default function LandingPage() {
               See how it works
             </Link>
           </div>
+
+          <div className="home-hero-stage" aria-hidden="true">
+            <div className="home-hero-stage-copy">
+              <span>Live on your website</span>
+              <p>Your pet can roam, idle, and feel like part of the page instead of a static icon.</p>
+            </div>
+
+            <div className="home-hero-stage-lane">
+              <div className="home-live-pet-runner">
+                <div className="home-live-pet-facing">
+                  <div className="home-live-pet">
+                    <div className="home-live-pet-ears">
+                      <span className="home-live-pet-ear home-live-pet-ear-left" />
+                      <span className="home-live-pet-ear home-live-pet-ear-right" />
+                    </div>
+                    <div className="home-live-pet-tail" />
+                    <div className="home-live-pet-body">
+                      <div className="home-live-pet-face">
+                        <span className="home-live-pet-eye" />
+                        <span className="home-live-pet-eye" />
+                        <span className="home-live-pet-nose" />
+                      </div>
+                      <div className="home-live-pet-belly" />
+                    </div>
+                    <div className="home-live-pet-legs">
+                      <span className="home-live-pet-leg home-live-pet-leg-front" />
+                      <span className="home-live-pet-leg home-live-pet-leg-back" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="home-live-pet-shadow-runner">
+                <div className="home-live-pet-shadow" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

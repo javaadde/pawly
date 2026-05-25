@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, petType, brandColor, greetingMessage, personality, position, allowedDomain } = body;
+  const { name, petType, brandColor, greetingMessage, personality, position, allowedDomain, ragEnabled, ragApiKey, ragModel } = body;
 
   if (!name) {
     return NextResponse.json({ error: 'Pet name is required' }, { status: 400 });
@@ -38,9 +38,12 @@ export async function POST(req: NextRequest) {
     petType: petType || 'cat',
     brandColor: brandColor || '#7C3AED',
     greetingMessage: greetingMessage || "Hi! 👋 I'm here to help!",
-    personality: personality || 'friendly',
-    position: position || 'bottom-right',
-    allowedDomain: allowedDomain || null,
+      personality: personality || 'friendly',
+      position: position || 'bottom-right',
+      allowedDomain: allowedDomain || null,
+      ragEnabled: Boolean(ragEnabled),
+      ragApiKey: ragApiKey?.trim() || null,
+      ragModel: ragModel?.trim() || 'openai/gpt-4o-mini',
   });
 
   return NextResponse.json({ pet }, { status: 201 });
