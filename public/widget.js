@@ -18,6 +18,8 @@
   let roamDirection = 1;
   let roamEnabled = true;
   let lastRoamFrame = 0;
+  let roamTarget = null;
+  let roamPauseUntil = 0;
   let visitorId = localStorage.getItem('pawly_visitor_id') || ('visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
   let conversationId = null;
   localStorage.setItem('pawly_visitor_id', visitorId);
@@ -66,9 +68,10 @@
     </svg>`;
   }
 
-  function petMarkup(type, color, size) {
+  function petMarkup(type, color, size, view) {
     if (type === 'robot') {
-      return `<div class="pawly-pixel-pet" style="--pawly-pet-size:${size}px;--pawly-pet-color:${color};">
+      const robotView = view || 'front';
+      return `<div class="pawly-pixel-pet pawly-pixel-pet-view-${robotView}" style="--pawly-pet-size:${size}px;--pawly-pet-color:${color};">
         <div class="pawly-pixel-pet-inner">
           <div class="pawly-pixel-pet-head">
             <span class="pawly-pixel-pet-shadow"></span>
@@ -109,13 +112,22 @@
       #pawly-btn[data-roaming='true'] .pawly-pixel-pet-inner {
         animation: pawly-pixel-pet-bob 0.52s steps(1, end) infinite;
       }
-      #pawly-btn[data-roaming='true'] .pawly-pixel-pet-leg-front {
+      #pawly-btn[data-roaming='true'][data-view='right'] .pawly-pixel-pet-leg-front,
+      #pawly-btn[data-roaming='true'][data-view='left'] .pawly-pixel-pet-leg-front {
         animation: pawly-pixel-leg-front 0.32s steps(1, end) infinite;
       }
-      #pawly-btn[data-roaming='true'] .pawly-pixel-pet-leg-back {
+      #pawly-btn[data-roaming='true'][data-view='right'] .pawly-pixel-pet-leg-back,
+      #pawly-btn[data-roaming='true'][data-view='left'] .pawly-pixel-pet-leg-back {
         animation: pawly-pixel-leg-back 0.32s steps(1, end) infinite;
       }
-      #pawly-btn[data-facing='left'] .pawly-pixel-pet-inner {
+      #pawly-btn[data-roaming='true'][data-view='front'] .pawly-pixel-pet-leg-front {
+        animation: pawly-pixel-front-leg-front 0.32s steps(1, end) infinite;
+      }
+      #pawly-btn[data-roaming='true'][data-view='front'] .pawly-pixel-pet-leg-back {
+        animation: pawly-pixel-front-leg-back 0.32s steps(1, end) infinite;
+      }
+      #pawly-btn[data-view='left'] .pawly-pixel-pet-inner,
+      .pawly-pixel-pet-view-left .pawly-pixel-pet-inner {
         transform: scaleX(-1);
       }
       #pawly-bubble {
@@ -210,6 +222,8 @@
       @keyframes pawly-pixel-pet-bob { 0%,100%{translate:0 0} 50%{translate:0 -2px} }
       @keyframes pawly-pixel-leg-front { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
       @keyframes pawly-pixel-leg-back { 0%,100%{transform:translateX(4px)} 50%{transform:translateX(0)} }
+      @keyframes pawly-pixel-front-leg-front { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+      @keyframes pawly-pixel-front-leg-back { 0%,100%{transform:translateY(-3px)} 50%{transform:translateY(0)} }
       .pawly-pixel-pet {
         width: var(--pawly-pet-size);
         height: var(--pawly-pet-size);
@@ -319,6 +333,52 @@
       }
       .pawly-pixel-pet-leg-front { left: calc(var(--pawly-pet-size) * 0.05); }
       .pawly-pixel-pet-leg-back { right: calc(var(--pawly-pet-size) * 0.05); }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-shadow,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-shadow,
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-ear,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-ear {
+        display: none;
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-head,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-head {
+        width: calc(var(--pawly-pet-size) * 0.56);
+        height: calc(var(--pawly-pet-size) * 0.52);
+        box-shadow: inset 0 calc(var(--pawly-pet-size) * -0.06) 0 #d6ca94;
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-faceplate,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-faceplate {
+        width: calc(var(--pawly-pet-size) * 0.3);
+        height: calc(var(--pawly-pet-size) * 0.18);
+        transform: translate(-50%, -32%);
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-torso,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-torso {
+        width: calc(var(--pawly-pet-size) * 0.2);
+        height: calc(var(--pawly-pet-size) * 0.2);
+        top: calc(var(--pawly-pet-size) * 0.58);
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-legs,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-legs {
+        width: calc(var(--pawly-pet-size) * 0.18);
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-leg,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-leg {
+        width: calc(var(--pawly-pet-size) * 0.07);
+        height: calc(var(--pawly-pet-size) * 0.2);
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-leg::after,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-leg::after {
+        left: calc(var(--pawly-pet-size) * -0.01);
+        width: calc(var(--pawly-pet-size) * 0.09);
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-leg-front,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-leg-front {
+        left: 0;
+      }
+      #pawly-btn[data-view='front'] .pawly-pixel-pet-leg-back,
+      .pawly-pixel-pet-view-front .pawly-pixel-pet-leg-back {
+        right: 0;
+      }
       @media (max-width: 420px) {
         #pawly-panel { width: min(360px, calc(100vw - 24px)); border-radius: 16px; }
       }
@@ -406,21 +466,57 @@
     if (!btn) return;
 
     btn.dataset.roaming = active ? 'true' : 'false';
-    btn.dataset.facing = roamDirection < 0 ? 'left' : 'right';
+    if (petConfig.petType === 'robot') {
+      btn.dataset.view = active ? (roamDirection < 0 ? 'left' : 'right') : 'front';
+    }
 
     if (petConfig.petType !== 'robot') {
       btn.style.animation = active ? 'pawly-float 3s ease-in-out infinite' : 'none';
     }
   }
 
+  function setRobotView(view) {
+    const root = document.getElementById('pawly-root');
+    const btn = root && root.shadowRoot ? root.shadowRoot.getElementById('pawly-btn') : null;
+    if (!btn || petConfig.petType !== 'robot') return;
+    btn.dataset.view = view;
+  }
+
+  function getRobotView(deltaX, deltaY) {
+    if (Math.abs(deltaX) >= Math.abs(deltaY) * 0.75) {
+      return deltaX < 0 ? 'left' : 'right';
+    }
+
+    return 'front';
+  }
+
   function stopRoaming() {
     roamEnabled = false;
     lastRoamFrame = 0;
+    roamTarget = null;
+    roamPauseUntil = 0;
     if (roamRaf) {
       cancelAnimationFrame(roamRaf);
       roamRaf = null;
     }
     setRoamingState(false);
+  }
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function getRandomRoamTarget() {
+    const btnSize = 76;
+    const minLeft = 12;
+    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 12);
+    const minTop = 12;
+    const maxTop = Math.max(minTop, window.innerHeight - btnSize - 12);
+
+    return {
+      left: randomBetween(minLeft, maxLeft),
+      top: randomBetween(minTop, maxTop),
+    };
   }
 
   function roamStep(timestamp) {
@@ -432,21 +528,41 @@
     if (!lastRoamFrame) lastRoamFrame = timestamp;
     const delta = timestamp - lastRoamFrame;
     lastRoamFrame = timestamp;
-    const speed = window.innerWidth < 720 ? 0.06 : 0.09;
-    const btnSize = 76;
-    const minLeft = 12;
-    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 12);
 
-    widgetPosition.left += roamDirection * delta * speed;
-    if (widgetPosition.left <= minLeft) {
-      widgetPosition.left = minLeft;
-      roamDirection = 1;
-    } else if (widgetPosition.left >= maxLeft) {
-      widgetPosition.left = maxLeft;
-      roamDirection = -1;
+    if (roamPauseUntil && timestamp < roamPauseUntil) {
+      setRoamingState(false);
+      updateWidgetPosition();
+      roamRaf = window.requestAnimationFrame(roamStep);
+      return;
     }
 
-    widgetPosition.top = Math.max(12, window.innerHeight - btnSize - 20);
+    if (!roamTarget) {
+      roamTarget = getRandomRoamTarget();
+    }
+
+    const deltaX = roamTarget.left - widgetPosition.left;
+    const deltaY = roamTarget.top - widgetPosition.top;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    if (distance < 6) {
+      widgetPosition.left = roamTarget.left;
+      widgetPosition.top = roamTarget.top;
+      roamTarget = null;
+      roamPauseUntil = timestamp + randomBetween(5000, 10000);
+      setRoamingState(false);
+      updateWidgetPosition();
+      roamRaf = window.requestAnimationFrame(roamStep);
+      return;
+    }
+
+    roamPauseUntil = 0;
+    roamDirection = deltaX < 0 ? -1 : 1;
+    setRobotView(getRobotView(deltaX, deltaY));
+    const speed = window.innerWidth < 720 ? 0.11 : 0.14;
+    const step = Math.min(distance, delta * speed);
+
+    widgetPosition.left += (deltaX / distance) * step;
+    widgetPosition.top += (deltaY / distance) * step;
     setRoamingState(true);
     updateWidgetPosition();
     roamRaf = window.requestAnimationFrame(roamStep);
@@ -454,7 +570,9 @@
 
   function startRoaming() {
     if (!roamEnabled || isOpen || dragState || roamRaf) return;
-    setRoamingState(true);
+    roamTarget = null;
+    roamPauseUntil = performance.now() + randomBetween(5000, 10000);
+    setRoamingState(false);
     roamRaf = window.requestAnimationFrame(roamStep);
   }
 
@@ -671,6 +789,7 @@
     if (!btn) return;
     if (petConfig.petType === 'robot') {
       btn.dataset.roaming = 'false';
+      btn.dataset.view = 'front';
       return;
     }
     btn.style.animation = 'none';
