@@ -37,7 +37,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="home-hero-stage" aria-hidden="true">
+          {/* <div className="home-hero-stage" aria-hidden="true">
             <div className="home-hero-stage-copy">
               <span>Live on your website</span>
               <p>Your pet can roam, idle, and feel like part of the page instead of a static icon.</p>
@@ -71,7 +71,7 @@ export default function LandingPage() {
                 <div className="home-live-pet-shadow" />
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 

@@ -11,109 +11,187 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect('/login');
 
   await connectDB();
-  const [pets, allLeads, allChats] = await Promise.all([
-    Pet.find({ userId: session.user.id }),
-    Lead.find({ petId: { $in: (await Pet.find({ userId: session.user.id }, '_id')).map((p) => p._id) } }),
-    Conversation.find({ petId: { $in: (await Pet.find({ userId: session.user.id }, '_id')).map((p) => p._id) } }),
+  const pets = await Pet.find({ userId: session.user.id });
+  const petIds = pets.map((pet) => pet._id);
+  const [allLeads, allChats] = await Promise.all([
+    Lead.find({ petId: { $in: petIds } }),
+    Conversation.find({ petId: { $in: petIds } }),
   ]);
 
+  const firstName = session.user.name?.split(' ')[0] || 'there';
+  const activePets = pets.filter((pet) => pet.isActive).length;
+  const inactivePets = pets.length - activePets;
+
   const stats = [
-    { label: 'Active Pets', value: pets.filter((p) => p.isActive).length, icon: '🐾', color: '#7c3aed' },
-    { label: 'Leads Captured', value: allLeads.length, icon: '📋', color: '#10b981' },
-    { label: 'Conversations', value: allChats.length, icon: '💬', color: '#f59e0b' },
-    { label: 'Total Pets', value: pets.length, icon: '✨', color: '#ec4899' },
+    { label: 'Active pets', value: activePets, detail: `${inactivePets} waiting in draft`, icon: '🐾' },
+    { label: 'Leads captured', value: allLeads.length, detail: 'Warm conversations worth following up', icon: '📋' },
+    { label: 'Conversations', value: allChats.length, detail: 'Questions answered across your site', icon: '💬' },
+    { label: 'Pet roster', value: pets.length, detail: 'Branded assistants ready to customize', icon: '✨' },
+  ];
+
+  const launchSteps = [
+    {
+      title: 'Create your assistant',
+      description: pets.length === 0 ? 'Start with your first pet and give it a name, tone, and personality.' : `${pets.length} pet${pets.length === 1 ? '' : 's'} already created.`,
+      href: '/dashboard/pets/new',
+      cta: pets.length === 0 ? 'Create your first pet' : 'Create another pet',
+    },
+    {
+      title: 'Train it on your content',
+      description: 'Add website knowledge so replies sound grounded in your product, policies, and FAQs.',
+      href: pets[0] ? `/dashboard/pets/${pets[0]._id}/knowledge` : '/dashboard/pets/new',
+      cta: pets[0] ? 'Open knowledge base' : 'Create a pet first',
+    },
+    {
+      title: 'Install on your site',
+      description: 'Drop in the script and let your Pawly assistant start helping visitors in real time.',
+      href: pets[0] ? `/dashboard/pets/${pets[0]._id}/install` : '/dashboard/pets/new',
+      cta: pets[0] ? 'View install steps' : 'Create a pet first',
+    },
   ];
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'white', marginBottom: '0.375rem' }}>
-          Welcome back, {session.user.name?.split(' ')[0]} 👋
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>
-          Here&apos;s what&apos;s happening with your Pawly pets.
-        </p>
-      </div>
+    <div className="dashboard-home-page">
+      <section className="dashboard-home-hero">
+        <div className="dashboard-home-hero-copy">
+          <p className="home-section-kicker">Pawly dashboard</p>
+          <h1>Welcome back, {firstName}.</h1>
+          <p>
+            Keep the same warm, polished energy from your landing page while you build, train, and launch each assistant.
+          </p>
+          <div className="home-hero-actions dashboard-home-hero-actions">
+            <Link href="/dashboard/pets/new" className="home-hero-button">
+              Create new pet
+            </Link>
+            <Link href={pets[0] ? `/dashboard/pets/${pets[0]._id}/install` : '/dashboard/pets/new'} className="home-hero-button home-hero-button-secondary">
+              {pets[0] ? 'Open install guide' : 'See setup flow'}
+            </Link>
+          </div>
+        </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-        {stats.map(({ label, value, icon, color }) => (
-          <div key={label} className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '0.75rem', background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
-              {icon}
+        <div className="dashboard-home-hero-panel">
+          <p className="dashboard-home-panel-label">At a glance</p>
+          <div className="dashboard-home-panel-stat">
+            <strong>{activePets}</strong>
+            <span>active assistants currently working across your site experience.</span>
+          </div>
+          <div className="dashboard-home-panel-divider" />
+          <div className="dashboard-home-panel-grid">
+            <div>
+              <span>{allLeads.length}</span>
+              <p>leads captured</p>
             </div>
             <div>
-              <p style={{ fontSize: '1.875rem', fontWeight: 800, color: 'white', lineHeight: 1 }}>{value}</p>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{label}</p>
+              <span>{allChats.length}</span>
+              <p>conversations started</p>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Pets list */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>Your Pets</h2>
-        <Link href="/dashboard/pets/new" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
-          + Create New Pet
-        </Link>
-      </div>
-
-      {pets.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🐾</div>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem' }}>No pets yet</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Create your first AI pet and add it to your website in minutes.</p>
-          <Link href="/dashboard/pets/new" className="btn-primary" style={{ display: 'inline-flex' }}>
-            🐾 Create your first pet
-          </Link>
         </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-          {pets.map((pet) => (
-            <div key={pet._id.toString()} className="card card-hover" style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', marginBottom: '1rem' }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: `${pet.brandColor}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: `2px solid ${pet.brandColor}44` }}>
-                  {pet.petType === 'cat' ? '🐱' : pet.petType === 'dog' ? '🐶' : '🐰'}
-                </div>
-                <div>
-                  <p style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{pet.name}</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{pet.personality} • {pet.position}</p>
-                </div>
-                <div style={{ marginLeft: 'auto' }}>
-                  <span style={{
-                    padding: '0.2rem 0.625rem',
-                    borderRadius: '999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    background: pet.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(107,114,128,0.15)',
-                    color: pet.isActive ? '#34d399' : 'var(--text-muted)',
-                    border: `1px solid ${pet.isActive ? 'rgba(16,185,129,0.3)' : 'rgba(107,114,128,0.3)'}`,
-                  }}>
-                    {pet.isActive ? '● Active' : '○ Inactive'}
-                  </span>
-                </div>
+      </section>
+
+      <section className="dashboard-home-stats">
+        {stats.map(({ label, value, detail, icon }) => (
+          <article key={label} className="dashboard-home-stat-card">
+            <div className="dashboard-home-stat-icon" aria-hidden="true">
+              {icon}
+            </div>
+            <p className="dashboard-home-stat-label">{label}</p>
+            <strong>{value}</strong>
+            <span>{detail}</span>
+          </article>
+        ))}
+      </section>
+
+      <section className="dashboard-home-grid">
+        <div className="dashboard-home-section-shell">
+          <div className="dashboard-home-section-header">
+            <div>
+              <p className="home-section-kicker">Your pets</p>
+              <h2>Your assistant lineup.</h2>
+            </div>
+            <Link href="/dashboard/pets/new" className="home-hero-button dashboard-home-inline-button">
+              Create pet
+            </Link>
+          </div>
+
+          {pets.length === 0 ? (
+            <div className="dashboard-home-empty-state">
+              <div className="dashboard-home-empty-icon" aria-hidden="true">🐾</div>
+              <h3>No pets yet</h3>
+              <p>Create your first AI pet, train it on your content, and make your website feel more alive.</p>
+              <Link href="/dashboard/pets/new" className="home-hero-button">
+                Create your first pet
+              </Link>
+            </div>
+          ) : (
+            <div className="dashboard-home-pet-grid">
+              {pets.map((pet) => (
+                <article key={pet._id.toString()} className="dashboard-home-pet-card">
+                  <div className="dashboard-home-pet-header">
+                    <div className="dashboard-home-pet-avatar" style={{ background: `${pet.brandColor}20`, borderColor: `${pet.brandColor}40`, color: pet.brandColor }}>
+                      {pet.petType === 'cat' ? '🐱' : pet.petType === 'dog' ? '🐶' : '🐰'}
+                    </div>
+                    <div>
+                      <h3>{pet.name}</h3>
+                      <p>{pet.personality} • {pet.position}</p>
+                    </div>
+                    <span className={`dashboard-home-status ${pet.isActive ? 'is-active' : ''}`}>
+                      {pet.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  <p className="dashboard-home-pet-quote">&quot;{pet.greetingMessage}&quot;</p>
+
+                  <div className="dashboard-home-pet-actions">
+                    <Link href={`/dashboard/pets/${pet._id}`} className="home-hero-button dashboard-home-action-button">
+                      Edit
+                    </Link>
+                    <Link href={`/dashboard/pets/${pet._id}/knowledge`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                      Train
+                    </Link>
+                    <Link href={`/dashboard/pets/${pet._id}/install`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                      Install
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <aside className="dashboard-home-side-column">
+          <section className="dashboard-home-section-shell dashboard-home-checklist-shell">
+            <p className="home-section-kicker">Launch flow</p>
+            <h2>Bring the landing page vibe into the live product.</h2>
+            <div className="dashboard-home-checklist">
+              {launchSteps.map((step, index) => (
+                <article key={step.title} className="dashboard-home-checklist-item">
+                  <strong>{index + 1}</strong>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                    <Link href={step.href}>{step.cta}</Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="dashboard-home-section-shell dashboard-home-conversation-shell">
+            <p className="dashboard-home-panel-label">Brand feel</p>
+            <div className="home-chat-thread dashboard-home-chat-thread">
+              <div className="home-chat-message home-chat-message-user">
+                <span>Can this still feel like our homepage instead of a generic widget?</span>
               </div>
-
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                &quot;{pet.greetingMessage}&quot;
-              </p>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Link href={`/dashboard/pets/${pet._id}`} className="btn-secondary" style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', fontSize: '0.8125rem' }}>
-                  ⚙️ Edit
-                </Link>
-                <Link href={`/dashboard/pets/${pet._id}/knowledge`} className="btn-ghost" style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', fontSize: '0.8125rem' }}>
-                  🧠 Train
-                </Link>
-                <Link href={`/dashboard/pets/${pet._id}/install`} className="btn-ghost" style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', fontSize: '0.8125rem' }}>
-                  📋 Install
-                </Link>
+              <div className="home-chat-message home-chat-message-assistant">
+                <span>
+                  Yes. Keep the tone warm, train it on your core pages, and use the dashboard to refine how your pet greets and guides visitors.
+                </span>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </section>
+        </aside>
+      </section>
     </div>
   );
 }

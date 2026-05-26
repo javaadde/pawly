@@ -1,5 +1,14 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
+const PetImagesSchema = new Schema(
+  {
+    front: { type: String, required: true },
+    left: { type: String, required: true },
+    right: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 export interface IPet extends Document {
   userId: mongoose.Types.ObjectId;
   name: string;
@@ -8,6 +17,12 @@ export interface IPet extends Document {
   greetingMessage: string;
   personality: 'friendly' | 'professional' | 'funny' | 'calm';
   position: 'bottom-right' | 'bottom-left';
+  petImages: {
+    front: string;
+    left: string;
+    right: string;
+  } | null;
+  animatedParts: Array<'head' | 'hands' | 'legs' | 'tail'>;
   allowedDomain: string | null;
   isActive: boolean;
   ragEnabled: boolean;
@@ -36,6 +51,11 @@ const PetSchema = new Schema<IPet>(
       type: String,
       enum: ['bottom-right', 'bottom-left'],
       default: 'bottom-right',
+    },
+    petImages: { type: PetImagesSchema, default: null },
+    animatedParts: {
+      type: [{ type: String, enum: ['head', 'hands', 'legs', 'tail'] }],
+      default: [],
     },
     allowedDomain: { type: String, default: null },
     isActive: { type: Boolean, default: true },

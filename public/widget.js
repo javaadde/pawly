@@ -69,6 +69,27 @@
   }
 
   function petMarkup(type, color, size, view) {
+    if (petConfig && petConfig.petImages && petConfig.petImages.front && petConfig.petImages.left && petConfig.petImages.right) {
+      const petView = view || 'front';
+      const animatedParts = Array.isArray(petConfig.animatedParts) ? petConfig.animatedParts : [];
+      const imageViews = ['front', 'left', 'right'];
+      const parts = ['head', 'hands', 'legs', 'tail'];
+      let markup = `<div class="pawly-custom-pet pawly-custom-pet-view-${petView}" style="--pawly-pet-size:${size}px;">`;
+
+      imageViews.forEach(function (imageView) {
+        const src = petConfig.petImages[imageView];
+        markup += `<img class="pawly-custom-pet-base pawly-custom-pet-image pawly-custom-pet-image-${imageView}" src="${src}" alt="" draggable="false"/>`;
+
+        parts.forEach(function (part) {
+          if (animatedParts.indexOf(part) === -1) return;
+          markup += `<img class="pawly-custom-pet-overlay pawly-custom-pet-overlay-${part} pawly-custom-pet-image pawly-custom-pet-image-${imageView}" src="${src}" alt="" draggable="false"/>`;
+        });
+      });
+
+      markup += '</div>';
+      return markup;
+    }
+
     if (type === 'robot') {
       const robotView = view || 'front';
       return `<div class="pawly-pixel-pet pawly-pixel-pet-view-${robotView}" style="--pawly-pet-size:${size}px;--pawly-pet-color:${color};">
@@ -109,6 +130,18 @@
         user-select: none;
       }
       #pawly-btn:hover { transform: scale(1.06); }
+      #pawly-btn[data-roaming='true'] .pawly-custom-pet-overlay-legs {
+        animation: pawly-custom-legs 0.38s ease-in-out infinite;
+      }
+      #pawly-btn .pawly-custom-pet-overlay-head {
+        animation: pawly-custom-head 2.4s ease-in-out infinite;
+      }
+      #pawly-btn .pawly-custom-pet-overlay-hands {
+        animation: pawly-custom-hands 1.7s ease-in-out infinite;
+      }
+      #pawly-btn .pawly-custom-pet-overlay-tail {
+        animation: pawly-custom-tail 1.2s ease-in-out infinite;
+      }
       #pawly-btn[data-roaming='true'] .pawly-pixel-pet-inner {
         animation: pawly-pixel-pet-bob 0.52s steps(1, end) infinite;
       }
@@ -175,6 +208,7 @@
       .pawly-msg.bot .pawly-bubble-text { background: rgba(255,255,255,0.07); border-radius: 4px 16px 16px 16px; }
       .pawly-msg.user .pawly-bubble-text { background: ${color}; border-radius: 16px 4px 16px 16px; }
       .pawly-avatar { width: 28px; height: 28px; border-radius: 50%; background: ${color}33; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+      .pawly-avatar .pawly-custom-pet { transform: scale(0.36); transform-origin: center; }
       #pawly-suggestions { padding: 0 14px 10px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
       .pawly-chip {
         padding: 5px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
@@ -219,6 +253,10 @@
       @keyframes pawly-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
       @keyframes pawly-fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       @keyframes pawly-slidein { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes pawly-custom-head { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
+      @keyframes pawly-custom-hands { 0%,100%{transform:translateX(0) rotate(0deg)} 50%{transform:translateX(3px) rotate(2deg)} }
+      @keyframes pawly-custom-legs { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+      @keyframes pawly-custom-tail { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(8deg)} }
       @keyframes pawly-pixel-pet-bob { 0%,100%{translate:0 0} 50%{translate:0 -2px} }
       @keyframes pawly-pixel-leg-front { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
       @keyframes pawly-pixel-leg-back { 0%,100%{transform:translateX(4px)} 50%{transform:translateX(0)} }
@@ -333,6 +371,45 @@
       }
       .pawly-pixel-pet-leg-front { left: calc(var(--pawly-pet-size) * 0.05); }
       .pawly-pixel-pet-leg-back { right: calc(var(--pawly-pet-size) * 0.05); }
+      .pawly-custom-pet {
+        position: relative;
+        width: var(--pawly-pet-size);
+        height: var(--pawly-pet-size);
+      }
+      .pawly-custom-pet-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      .pawly-custom-pet-base,
+      .pawly-custom-pet-overlay {
+        display: none;
+      }
+      #pawly-btn[data-view='front'] .pawly-custom-pet-image-front,
+      .pawly-custom-pet-view-front .pawly-custom-pet-image-front,
+      #pawly-btn[data-view='left'] .pawly-custom-pet-image-left,
+      .pawly-custom-pet-view-left .pawly-custom-pet-image-left,
+      #pawly-btn[data-view='right'] .pawly-custom-pet-image-right,
+      .pawly-custom-pet-view-right .pawly-custom-pet-image-right {
+        display: block;
+      }
+      .pawly-custom-pet-overlay-head {
+        clip-path: inset(0 18% 54% 18%);
+      }
+      .pawly-custom-pet-overlay-hands {
+        clip-path: inset(34% 8% 26% 8%);
+      }
+      .pawly-custom-pet-overlay-legs {
+        clip-path: inset(66% 18% 0 18%);
+      }
+      .pawly-custom-pet-overlay-tail {
+        clip-path: inset(28% 0 22% 62%);
+        transform-origin: 78% 58%;
+      }
       #pawly-btn[data-view='front'] .pawly-pixel-pet-shadow,
       .pawly-pixel-pet-view-front .pawly-pixel-pet-shadow,
       #pawly-btn[data-view='front'] .pawly-pixel-pet-ear,
@@ -466,19 +543,20 @@
     if (!btn) return;
 
     btn.dataset.roaming = active ? 'true' : 'false';
-    if (petConfig.petType === 'robot') {
+    if (petConfig.petType === 'robot' || (petConfig.petImages && petConfig.petImages.front && petConfig.petImages.left && petConfig.petImages.right)) {
       btn.dataset.view = active ? (roamDirection < 0 ? 'left' : 'right') : 'front';
     }
 
-    if (petConfig.petType !== 'robot') {
+    if (petConfig.petType !== 'robot' && !(petConfig.petImages && petConfig.petImages.front)) {
       btn.style.animation = active ? 'pawly-float 3s ease-in-out infinite' : 'none';
     }
   }
 
-  function setRobotView(view) {
+  function setActivePetView(view) {
     const root = document.getElementById('pawly-root');
     const btn = root && root.shadowRoot ? root.shadowRoot.getElementById('pawly-btn') : null;
-    if (!btn || petConfig.petType !== 'robot') return;
+    if (!btn) return;
+    if (petConfig.petType !== 'robot' && !(petConfig.petImages && petConfig.petImages.front && petConfig.petImages.left && petConfig.petImages.right)) return;
     btn.dataset.view = view;
   }
 
@@ -557,7 +635,7 @@
 
     roamPauseUntil = 0;
     roamDirection = deltaX < 0 ? -1 : 1;
-    setRobotView(getRobotView(deltaX, deltaY));
+    setActivePetView(getRobotView(deltaX, deltaY));
     const speed = window.innerWidth < 720 ? 0.11 : 0.14;
     const step = Math.min(distance, delta * speed);
 

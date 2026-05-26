@@ -1,9 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Pet } from '@/types';
+import type { AnimatedPart, Pet, PetImages } from '@/types';
+
+const VIEW_UPLOADS = [
+  { key: 'front', label: 'Front view' },
+  { key: 'left', label: 'Left view' },
+  { key: 'right', label: 'Right view' },
+] as const;
+
+const ANIMATION_OPTIONS: Array<{ value: AnimatedPart; label: string; desc: string }> = [
+  { value: 'head', label: 'Head', desc: 'Small nodding motion.' },
+  { value: 'hands', label: 'Hands', desc: 'Short waving motion.' },
+  { value: 'legs', label: 'Legs', desc: 'Walking motion while roaming.' },
+  { value: 'tail', label: 'Tail', desc: 'Gentle side-to-side wag.' },
+];
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function EditPetPage() {
   const { petId } = useParams<{ petId: string }>();
@@ -11,27 +34,87 @@ export default function EditPetPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingView, setUploadingView] = useState<keyof PetImages | ''>('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState<Partial<Pet>>({});
 
-  const load = useCallback(async () => {
-    const res = await fetch(`/api/pets/${petId}`);
-    if (res.ok) {
-      const { pet } = await res.json();
-      setForm(pet);
-    }
-    setLoading(false);
-  }, [petId]);
+  useEffect(() => {
+    let cancelled = false;
 
-  useEffect(() => { load(); }, [load]);
+    async function init() {
+      const res = await fetch(`/api/pets/${petId}`);
+      if (!res.ok || cancelled) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      const { pet } = await res.json();
+      if (cancelled) return;
+
+      setForm(pet);
+      setLoading(false);
+    }
+
+    void init();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [petId]);
 
   function set(key: string, value: string | boolean) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  async function updatePetImage(view: keyof PetImages, file: File | null) {
+    if (!file) return;
+
+    setUploadingView(view);
+
+    try {
+      const image = await readFileAsDataUrl(file);
+      if (!image) {
+        throw new Error('Invalid image file');
+      }
+
+      setForm((current) => ({
+        ...current,
+        petImages: {
+          front: current.petImages?.front || '',
+          left: current.petImages?.left || '',
+          right: current.petImages?.right || '',
+          [view]: image,
+        },
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setUploadingView('');
+    }
+  }
+
+  function toggleAnimatedPart(part: AnimatedPart) {
+    setForm((current) => {
+      const animatedParts = current.animatedParts || [];
+
+      return {
+        ...current,
+        animatedParts: animatedParts.includes(part)
+          ? animatedParts.filter((item) => item !== part)
+          : [...animatedParts, part],
+      };
+    });
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!form.petImages?.front || !form.petImages?.left || !form.petImages?.right) {
+      setError('Please upload the front, left, and right pet images.');
+      return;
+    }
+
     setSaving(true); setError(''); setSuccess('');
     const res = await fetch(`/api/pets/${petId}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -124,6 +207,72 @@ export default function EditPetPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <input type="checkbox" id="edit-active" checked={form.isActive ?? true} onChange={(e) => set('isActive', e.target.checked)} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--purple-600)' }} />
               <label htmlFor="edit-active" style={{ color: 'white', fontSize: '0.9rem', cursor: 'pointer' }}>Pet is active (visible on website)</label>
+            </div>
+            <div className="field">
+              <label className="label">Pet images</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                {VIEW_UPLOADS.map(({ key, label }) => (
+                  <label
+                    key={key}
+                    htmlFor={`edit-pet-image-${key}`}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem',
+                      padding: '0.875rem',
+                      borderRadius: '0.875rem',
+                      border: `1px solid ${form.petImages?.[key] ? 'rgba(168,85,247,0.45)' : 'var(--dark-border)'}`,
+                      background: 'rgba(255,255,255,0.02)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <p style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>{label}</p>
+                    <div style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: '0.75rem', overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {form.petImages?.[key] ? (
+                        <Image src={form.petImages[key]} alt={`${label} preview`} fill unoptimized style={{ objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '0.75rem' }}>
+                          {uploadingView === key ? 'Uploading...' : 'Click to upload'}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      id={`edit-pet-image-${key}`}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => updatePetImage(key, e.target.files?.[0] || null)}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">Animated body parts</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.625rem' }}>
+                {ANIMATION_OPTIONS.map(({ value, label, desc }) => {
+                  const selected = form.animatedParts?.includes(value) ?? false;
+
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleAnimatedPart(value)}
+                      style={{
+                        padding: '0.875rem 1rem',
+                        borderRadius: '0.75rem',
+                        border: `2px solid ${selected ? 'var(--purple-500)' : 'var(--dark-border)'}`,
+                        background: selected ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <p style={{ color: selected ? 'var(--purple-400)' : 'white', fontWeight: 600, fontSize: '0.875rem' }}>{label}</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>{desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { KnowledgeItem } from '@/types';
@@ -28,7 +28,7 @@ export default function KnowledgePage() {
   const [form, setForm] = useState({ title: '', content: '', sourceType: 'manual' });
   const [petName, setPetName] = useState('');
 
-  const load = useCallback(async () => {
+  async function load() {
     setLoading(true);
     const [itemsRes, petRes] = await Promise.all([
       fetch(`/api/knowledge/${petId}`),
@@ -37,9 +37,30 @@ export default function KnowledgePage() {
     if (itemsRes.ok) setItems((await itemsRes.json()).items);
     if (petRes.ok) setPetName((await petRes.json()).pet?.name || 'Pet');
     setLoading(false);
-  }, [petId]);
+  }
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function init() {
+      const [itemsRes, petRes] = await Promise.all([
+        fetch(`/api/knowledge/${petId}`),
+        fetch(`/api/pets/${petId}`),
+      ]);
+
+      if (cancelled) return;
+
+      if (itemsRes.ok) setItems((await itemsRes.json()).items);
+      if (petRes.ok) setPetName((await petRes.json()).pet?.name || 'Pet');
+      setLoading(false);
+    }
+
+    void init();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [petId]);
 
   async function addItem(e: React.FormEvent) {
     e.preventDefault();

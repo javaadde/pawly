@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { PageAction } from '@/types';
@@ -12,14 +12,36 @@ export default function ActionsPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ label: '', intent: '', selector: '', actionType: 'scroll_to', url: '' });
 
-  const load = useCallback(async () => {
+  async function load() {
     setLoading(true);
     const res = await fetch(`/api/actions/${petId}`);
     if (res.ok) setActions((await res.json()).actions);
     setLoading(false);
-  }, [petId]);
+  }
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function init() {
+      const res = await fetch(`/api/actions/${petId}`);
+      if (!res.ok || cancelled) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      if (cancelled) return;
+
+      setActions(data.actions);
+      setLoading(false);
+    }
+
+    void init();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [petId]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();

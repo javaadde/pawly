@@ -3,9 +3,16 @@
 export type PetType = 'cat' | 'dog' | 'bunny' | 'robot';
 export type Personality = 'friendly' | 'professional' | 'funny' | 'calm';
 export type Position = 'bottom-right' | 'bottom-left';
+export type AnimatedPart = 'head' | 'hands' | 'legs' | 'tail';
 export type ActionType = 'scroll_to' | 'highlight' | 'open_link';
 export type Emotion = 'idle' | 'happy' | 'thinking' | 'confused';
 export type MessageRole = 'user' | 'assistant';
+
+export interface PetImages {
+  front: string;
+  left: string;
+  right: string;
+}
 
 export interface Pet {
   _id: string;
@@ -16,6 +23,8 @@ export interface Pet {
   greetingMessage: string;
   personality: Personality;
   position: Position;
+  petImages: PetImages | null;
+  animatedParts: AnimatedPart[];
   allowedDomain: string | null;
   isActive: boolean;
   ragEnabled: boolean;
@@ -83,6 +92,8 @@ export interface PetSettings {
   greetingMessage: string;
   personality: Personality;
   position: Position;
+  petImages: PetImages | null;
+  animatedParts: AnimatedPart[];
 }
 
 // AI Chat response structure

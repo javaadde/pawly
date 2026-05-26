@@ -21,7 +21,7 @@ export async function GET(
   await connectDB();
 
   const pet = await Pet.findById(petId).select(
-    'name petType brandColor greetingMessage personality position isActive allowedDomain'
+    'name petType brandColor greetingMessage personality position petImages animatedParts isActive allowedDomain'
   );
 
   if (!pet) {
@@ -48,5 +48,7 @@ export async function GET(
     greetingMessage: pet.greetingMessage,
     personality: pet.personality,
     position: pet.position,
+    petImages: pet.petImages,
+    animatedParts: pet.animatedParts || [],
   }, { headers });
 }
