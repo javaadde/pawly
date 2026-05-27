@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SessionProvider session={session}>
-      <div style={{ display: 'flex' }}>
+      <div className="dashboard-shell">
         <DashboardSidebar user={session.user} />
         <main className="main-content">
           {children}
