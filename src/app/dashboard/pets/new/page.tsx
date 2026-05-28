@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { AnimatedPart, PetImages } from '@/types';
 
 const PET_TYPES = [
@@ -20,16 +21,16 @@ const PERSONALITIES = [
 ];
 
 const VIEW_UPLOADS = [
-  { key: 'front', label: 'Front view', hint: 'Used while the pet is facing forward.' },
-  { key: 'left', label: 'Left view', hint: 'Used while the pet moves to the left.' },
-  { key: 'right', label: 'Right view', hint: 'Used while the pet moves to the right.' },
+  { key: 'front', label: 'Front view', hint: 'Facing forward' },
+  { key: 'left', label: 'Left view', hint: 'Moving left' },
+  { key: 'right', label: 'Right view', hint: 'Moving right' },
 ] as const;
 
 const ANIMATION_OPTIONS: Array<{ value: AnimatedPart; label: string; desc: string }> = [
-  { value: 'head', label: 'Head', desc: 'Small nodding motion.' },
-  { value: 'hands', label: 'Hands', desc: 'Short waving motion.' },
-  { value: 'legs', label: 'Legs', desc: 'Walking motion while roaming.' },
-  { value: 'tail', label: 'Tail', desc: 'Gentle side-to-side wag.' },
+  { value: 'head', label: 'Head', desc: 'Nodding motion' },
+  { value: 'hands', label: 'Hands', desc: 'Waving motion' },
+  { value: 'legs', label: 'Legs', desc: 'Walking motion' },
+  { value: 'tail', label: 'Tail', desc: 'Gentle wag' },
 ];
 
 function readFileAsDataUrl(file: File) {
@@ -43,13 +44,14 @@ function readFileAsDataUrl(file: File) {
 
 export default function NewPetPage() {
   const router = useRouter();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadingView, setUploadingView] = useState<keyof PetImages | ''>('');
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '',
     petType: 'cat',
-    brandColor: '#7C3AED',
+    brandColor: '#ff6a3d',
     greetingMessage: "Hi! 👋 I'm here to help! What can I do for you today?",
     personality: 'friendly',
     position: 'bottom-right',
@@ -62,27 +64,21 @@ export default function NewPetPage() {
     animatedParts: ['legs'] as AnimatedPart[],
   });
 
+  const totalSteps = 4;
+
   function set(key: string, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
   async function updatePetImage(view: keyof PetImages, file: File | null) {
     if (!file) return;
-
     setUploadingView(view);
-
     try {
       const image = await readFileAsDataUrl(file);
-      if (!image) {
-        throw new Error('Invalid image file');
-      }
-
+      if (!image) throw new Error('Invalid image file');
       setForm((current) => ({
         ...current,
-        petImages: {
-          ...current.petImages,
-          [view]: image,
-        },
+        petImages: { ...current.petImages, [view]: image },
       }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload image');
@@ -100,25 +96,33 @@ export default function NewPetPage() {
     }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function nextStep() {
+    if (step === 1 && !form.name) {
+      setError('Please give your pet a name.');
+      return;
+    }
     setError('');
+    setStep((s) => Math.min(s + 1, totalSteps));
+  }
 
+  function prevStep() {
+    setError('');
+    setStep((s) => Math.max(s - 1, 1));
+  }
+
+  async function handleSubmit() {
+    setError('');
     if (!form.petImages.front || !form.petImages.left || !form.petImages.right) {
       setError('Please upload the front, left, and right pet images.');
       return;
     }
 
     setLoading(true);
-
     try {
       const res = await fetch('/api/pets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          allowedDomain: form.allowedDomain || null,
-        }),
+        body: JSON.stringify({ ...form, allowedDomain: form.allowedDomain || null }),
       });
 
       const data = await res.json();
@@ -127,7 +131,6 @@ export default function NewPetPage() {
         setLoading(false);
         return;
       }
-
       router.push(`/dashboard/pets/${data.pet._id}/knowledge`);
     } catch {
       setError('Something went wrong. Please try again.');
@@ -136,223 +139,198 @@ export default function NewPetPage() {
   }
 
   return (
-    <div style={{ padding: '2.5rem', maxWidth: 700 }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'white', marginBottom: '0.375rem' }}>Create a new pet ✨</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Customize your AI pet mascot for your website.</p>
-      </div>
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-        {error && <div className="alert alert-error">{error}</div>}
-
-        {/* Pet name */}
-        <div className="field">
-          <label className="label" htmlFor="pet-name">Pet name *</label>
-          <input id="pet-name" className="input" placeholder="e.g. Bella, Max, Luna" value={form.name} onChange={(e) => set('name', e.target.value)} required />
-          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>This is what visitors will see above the chat window.</p>
-        </div>
-
-        {/* Pet type */}
-        <div className="field">
-          <label className="label">Pet type</label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {PET_TYPES.map(({ value, emoji, label }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => set('petType', value)}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  borderRadius: '0.75rem',
-                  border: `2px solid ${form.petType === value ? 'var(--purple-500)' : 'var(--dark-border)'}`,
-                  background: form.petType === value ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
-                  color: form.petType === value ? 'var(--purple-400)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  transition: 'all 0.15s ease',
-                }}
-                id={`pet-type-${value}`}
-              >
-                <span style={{ fontSize: '1.75rem' }}>{emoji}</span>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{label}</span>
+    <div className="dashboard-home-page">
+      <section className="dashboard-home-hero">
+        <div className="dashboard-home-hero-copy">
+          <p className="home-section-kicker">Step {step} of {totalSteps}</p>
+          <h1>{step === 1 ? 'Start with a name.' : step === 2 ? 'Choose a look.' : step === 3 ? 'Set the vibe.' : 'Bring it to life.'}</h1>
+          <p>
+            {step === 1 ? 'Every great assistant needs a name and a warm welcome for your visitors.' : 
+             step === 2 ? 'Pick a pet type and a color that matches your brand’s hero section.' : 
+             step === 3 ? 'Decide how your pet talks and where it should hang out on your site.' : 
+             'Upload your custom illustrations and choose which parts should move.'}
+          </p>
+          
+          <div className="home-hero-actions dashboard-home-hero-actions">
+            {step > 1 && (
+              <button onClick={prevStep} className="home-hero-button home-hero-button-secondary" style={{ minWidth: '8rem' }}>
+                Back
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Brand color */}
-        <div className="field">
-          <label className="label">Brand color</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <input type="color" value={form.brandColor} onChange={(e) => set('brandColor', e.target.value)} id="brand-color" />
-            <div>
-              <p style={{ color: 'white', fontWeight: 500, fontSize: '0.9rem' }}>{form.brandColor}</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>The pet and chat panel will use this color.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Personality */}
-        <div className="field">
-          <label className="label">Personality</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
-            {PERSONALITIES.map(({ value, label, desc }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => set('personality', value)}
-                id={`personality-${value}`}
-                style={{
-                  padding: '0.875rem 1rem',
-                  borderRadius: '0.625rem',
-                  border: `2px solid ${form.personality === value ? 'var(--purple-500)' : 'var(--dark-border)'}`,
-                  background: form.personality === value ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <p style={{ fontWeight: 600, fontSize: '0.875rem', color: form.personality === value ? 'var(--purple-400)' : 'white' }}>{label}</p>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{desc}</p>
+            )}
+            {step < totalSteps ? (
+              <button onClick={nextStep} className="home-hero-button" style={{ minWidth: '10rem' }}>
+                Next step
               </button>
-            ))}
+            ) : (
+              <button onClick={handleSubmit} disabled={loading} className="home-hero-button" style={{ minWidth: '12rem' }}>
+                {loading ? '🐾 Creating...' : '🐾 Finish & Train'}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Greeting */}
-        <div className="field">
-          <label className="label" htmlFor="greeting">Greeting message</label>
-          <textarea
-            id="greeting"
-            className="input"
-            rows={3}
-            value={form.greetingMessage}
-            onChange={(e) => set('greetingMessage', e.target.value)}
-            style={{ resize: 'vertical' }}
-          />
-        </div>
-
-        <div className="field">
-          <label className="label">Pet images *</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-            {VIEW_UPLOADS.map(({ key, label, hint }) => (
-              <label
-                key={key}
-                htmlFor={`pet-image-${key}`}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem',
-                  padding: '0.875rem',
-                  borderRadius: '0.875rem',
-                  border: `1px solid ${form.petImages[key] ? 'rgba(168,85,247,0.45)' : 'var(--dark-border)'}`,
-                  background: 'rgba(255,255,255,0.02)',
-                  cursor: 'pointer',
-                }}
-              >
-                <div>
-                  <p style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>{label}</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>{hint}</p>
+        <div className="dashboard-home-hero-panel">
+          <p className="dashboard-home-panel-label">Onboarding progress</p>
+          <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.85rem' }}>
+            {[
+              { s: 1, label: 'Basic Identity' },
+              { s: 2, label: 'Visual Style' },
+              { s: 3, label: 'Behavior' },
+              { s: 4, label: 'Asset Upload' },
+            ].map((item) => (
+              <div key={item.s} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ 
+                  width: '2rem', height: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800,
+                  background: step > item.s ? 'var(--orange-500)' : step === item.s ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  border: step === item.s ? '2px solid var(--orange-500)' : step > item.s ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  color: step >= item.s ? '#fff' : 'rgba(255,255,255,0.3)'
+                }}>
+                  {step > item.s ? '✓' : item.s}
                 </div>
-                <div style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: '0.75rem', overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {form.petImages[key] ? (
-                    <Image src={form.petImages[key]} alt={`${label} preview`} fill unoptimized style={{ objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '0.75rem' }}>
-                      {uploadingView === key ? 'Uploading...' : 'Click to upload'}
-                    </span>
-                  )}
-                </div>
-                <input
-                  id={`pet-image-${key}`}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => updatePetImage(key, e.target.files?.[0] || null)}
-                  style={{ display: 'none' }}
-                />
-              </label>
+                <span style={{ 
+                  fontSize: '0.95rem', fontWeight: step === item.s ? 700 : 500,
+                  color: step === item.s ? '#fff' : 'rgba(255,255,255,0.4)'
+                }}>
+                  {item.label}
+                </span>
+              </div>
             ))}
           </div>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Upload one image for each pet angle so the widget can switch between front, left, and right views.
+          <div className="dashboard-home-panel-divider" />
+          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+            {step === 1 ? 'A good name makes your brand more approachable.' : 'Colors and motion help the assistant feel like a native part of your UI.'}
           </p>
         </div>
+      </section>
 
-        <div className="field">
-          <label className="label">Animated body parts</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.625rem' }}>
-            {ANIMATION_OPTIONS.map(({ value, label, desc }) => {
-              const selected = form.animatedParts.includes(value);
+      <section className="dashboard-home-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="dashboard-home-section-shell" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+          {error && <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => toggleAnimatedPart(value)}
-                  style={{
-                    padding: '0.875rem 1rem',
-                    borderRadius: '0.75rem',
-                    border: `2px solid ${selected ? 'var(--purple-500)' : 'var(--dark-border)'}`,
-                    background: selected ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <p style={{ color: selected ? 'var(--purple-400)' : 'white', fontWeight: 600, fontSize: '0.875rem' }}>{label}</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>{desc}</p>
-                </button>
-              );
-            })}
-          </div>
+          {step === 1 && (
+            <div className="animate-fade-up" style={{ display: 'grid', gap: '1.75rem' }}>
+              <div className="field">
+                <label className="label">What should we call your pet? *</label>
+                <input className="input" placeholder="e.g. Bella, Max, Luna" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+              </div>
+              <div className="field">
+                <label className="label">How should it greet visitors?</label>
+                <textarea className="input" rows={4} value={form.greetingMessage} onChange={(e) => set('greetingMessage', e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="animate-fade-up" style={{ display: 'grid', gap: '2rem' }}>
+              <div className="field">
+                <label className="label">Choose your mascot type</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                  {PET_TYPES.map(({ value, emoji, label }) => (
+                    <button key={value} onClick={() => set('petType', value)} className="card-hover" style={{
+                      padding: '1.5rem', borderRadius: '1.25rem', border: `2px solid ${form.petType === value ? 'var(--orange-500)' : 'rgba(255,255,255,0.05)'}`,
+                      background: form.petType === value ? 'rgba(255, 106, 61, 0.08)' : 'rgba(255,255,255,0.02)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', transition: 'all 0.2s ease'
+                    }}>
+                      <span style={{ fontSize: '2.5rem' }}>{emoji}</span>
+                      <span style={{ color: form.petType === value ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: 700, fontSize: '0.9rem' }}>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Brand highlight color</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <input type="color" value={form.brandColor} onChange={(e) => set('brandColor', e.target.value)} style={{ width: '4rem', height: '4rem', borderRadius: '0.75rem' }} />
+                  <div>
+                    <p style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>{form.brandColor}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>This color will be used for buttons and accents.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="animate-fade-up" style={{ display: 'grid', gap: '2rem' }}>
+              <div className="field">
+                <label className="label">Tone & Personality</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  {PERSONALITIES.map(({ value, label, desc }) => (
+                    <button key={value} onClick={() => set('personality', value)} className="card-hover" style={{
+                      padding: '1.25rem', borderRadius: '1.1rem', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s ease',
+                      border: `2px solid ${form.personality === value ? 'var(--orange-500)' : 'rgba(255,255,255,0.05)'}`,
+                      background: form.personality === value ? 'rgba(255, 106, 61, 0.08)' : 'rgba(255,255,255,0.02)',
+                    }}>
+                      <p style={{ fontWeight: 800, color: form.personality === value ? '#fff' : 'rgba(255,255,255,0.8)', fontSize: '1rem' }}>{label}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginTop: '0.25rem' }}>{desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div className="field">
+                  <label className="label">Placement</label>
+                  <select className="input" value={form.position} onChange={(e) => set('position', e.target.value)}>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="label">Security Domain</label>
+                  <input className="input" placeholder="e.g. example.com" value={form.allowedDomain} onChange={(e) => set('allowedDomain', e.target.value)} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="animate-fade-up" style={{ display: 'grid', gap: '2rem' }}>
+              <div className="field">
+                <label className="label">Upload your pet illustrations</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  {VIEW_UPLOADS.map(({ key, label, hint }) => (
+                    <label key={key} className="card-hover" style={{
+                      display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', borderRadius: '1.25rem', cursor: 'pointer',
+                      border: `1px solid ${form.petImages[key] ? 'var(--orange-500)' : 'rgba(255,255,255,0.08)'}`,
+                      background: 'rgba(255,255,255,0.02)'
+                    }}>
+                      <div>
+                        <p style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{label}</p>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>{hint}</p>
+                      </div>
+                      <div style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '1rem', overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {form.petImages[key] ? (
+                          <Image src={form.petImages[key]} alt={label} fill unoptimized style={{ objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{uploadingView === key ? '...' : 'Click to upload'}</span>
+                        )}
+                      </div>
+                      <input type="file" accept="image/*" onChange={(e) => updatePetImage(key, e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Motion Settings</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+                  {ANIMATION_OPTIONS.map(({ value, label }) => {
+                    const selected = form.animatedParts.includes(value);
+                    return (
+                      <button key={value} onClick={() => toggleAnimatedPart(value)} style={{
+                        padding: '0.75rem', borderRadius: '0.85rem', border: `1px solid ${selected ? 'var(--orange-500)' : 'rgba(255,255,255,0.1)'}`,
+                        background: selected ? 'rgba(255, 106, 61, 0.1)' : 'transparent',
+                        color: selected ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer'
+                      }}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Position */}
-        <div className="field">
-          <label className="label">Widget position</label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {['bottom-right', 'bottom-left'].map((pos) => (
-              <button
-                key={pos}
-                type="button"
-                onClick={() => set('position', pos)}
-                id={`position-${pos}`}
-                style={{
-                  flex: 1, padding: '0.75rem',
-                  borderRadius: '0.625rem',
-                  border: `2px solid ${form.position === pos ? 'var(--purple-500)' : 'var(--dark-border)'}`,
-                  background: form.position === pos ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
-                  color: form.position === pos ? 'var(--purple-400)' : 'var(--text-secondary)',
-                  cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem',
-                  transition: 'all 0.15s ease',
-                  textTransform: 'capitalize',
-                }}
-              >
-                {pos === 'bottom-right' ? '↘ Bottom Right' : '↙ Bottom Left'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Allowed domain */}
-        <div className="field">
-          <label className="label" htmlFor="domain">Allowed domain <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></label>
-          <input id="domain" className="input" placeholder="e.g. example.com" value={form.allowedDomain} onChange={(e) => set('allowedDomain', e.target.value)} />
-          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Leave empty to allow the widget on any website (useful for testing).</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
-          <button type="button" onClick={() => router.back()} className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} id="cancel-pet">
-            Cancel
-          </button>
-          <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 2, justifyContent: 'center', opacity: loading ? 0.7 : 1 }} id="create-pet-submit">
-            {loading ? '🐾 Creating...' : '🐾 Create Pet & Add Knowledge'}
-          </button>
-        </div>
-      </form>
+      </section>
     </div>
   );
 }

@@ -1,7 +1,12 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import heroBackground from '@/assets/images/background.png';
+import { auth } from '@/lib/auth';
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await auth();
+  if (session) redirect('/dashboard');
+
   return (
     <main className="home-page">
       <section
