@@ -133,9 +133,9 @@ export default function DashboardSidebar({ user }: SidebarProps) {
           <SidebarIcon name={isOpen ? 'chevron-left' : 'chevron-right'} className="sidebar-nav-icon" />
         </button>
         {isOpen && (
-          <Link href="/dashboard" className="sidebar-brand-text">
+          <span className="sidebar-brand-text">
             Pawly AI
-          </Link>
+          </span>
         )}
       </div>
 

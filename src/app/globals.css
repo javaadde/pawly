@@ -3262,12 +3262,13 @@ body {
 
 .sidebar-brand-text {
   color: #fff;
-  text-decoration: none;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   opacity: 0;
   animation: fadeIn 0.3s ease forwards 0.1s;
+  pointer-events: none;
+  user-select: none;
 }
 
 @keyframes fadeIn {
