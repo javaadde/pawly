@@ -132,6 +132,11 @@ export default function DashboardSidebar({ user }: SidebarProps) {
         <button type="button" className="sidebar-rail-arrow" onClick={handleRailClick} aria-label={isOpen ? 'Close menu' : 'Open menu'}>
           <SidebarIcon name={isOpen ? 'chevron-left' : 'chevron-right'} className="sidebar-nav-icon" />
         </button>
+        {isOpen && (
+          <Link href="/dashboard" className="sidebar-brand-text">
+            Pawly AI
+          </Link>
+        )}
       </div>
 
       <nav className="sidebar-primary-nav" aria-label="Dashboard navigation">
@@ -154,7 +159,6 @@ export default function DashboardSidebar({ user }: SidebarProps) {
 
       <div className={`sidebar-panel ${isOpen ? 'is-open' : ''}`}>
         <div className="sidebar-panel-subgroup">
-          <p className="sidebar-section-label">Explore</p>
           {utilityItems.map(({ href, label, icon }) => (
             <Link key={href} href={href} className="sidebar-primary-link sidebar-secondary-link">
               <span className="sidebar-primary-link-copy">

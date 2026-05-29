@@ -3255,6 +3255,24 @@ body {
 
 .sidebar.is-open .sidebar-topbar {
   justify-content: flex-start;
+  align-items: center;
+  gap: 1.25rem;
+  padding-left: 0.25rem;
+}
+
+.sidebar-brand-text {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards 0.1s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .sidebar-primary-link,
