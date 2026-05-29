@@ -72,7 +72,7 @@ export default function ActionsPage() {
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'white', marginBottom: '0.375rem' }}>🗺️ Page Actions</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Define what Pawly should do when visitors ask about specific sections.</p>
         </div>
-        <Link href={`/dashboard/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install Script</Link>
+        <Link href={`/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install Script</Link>
       </div>
 
       <div className="alert alert-info" style={{ marginBottom: '1.5rem' }}>

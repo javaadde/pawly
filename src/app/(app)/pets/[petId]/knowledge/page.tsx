@@ -149,8 +149,8 @@ export default function KnowledgePage() {
           <p style={{ color: 'var(--text-secondary)' }}>Train <strong style={{ color: 'white' }}>{petName}</strong> with your business info, FAQs, and services.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link href={`/dashboard/pets/${petId}/actions`} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>🗺️ Page Actions</Link>
-          <Link href={`/dashboard/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install</Link>
+          <Link href={`/pets/${petId}/actions`} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>🗺️ Page Actions</Link>
+          <Link href={`/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install</Link>
         </div>
       </div>
 

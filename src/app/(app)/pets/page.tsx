@@ -2,8 +2,6 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongoose';
 import Pet from '@/lib/models/Pet';
-import Lead from '@/lib/models/Lead';
-import Conversation from '@/lib/models/Conversation';
 import Link from 'next/link';
 
 export default async function PetsPage() {
@@ -26,7 +24,7 @@ export default async function PetsPage() {
             View, manage, and monitor all your AI assistants in one place. Each pet can have its own personality, knowledge base, and unique placement on your site.
           </p>
           <div className="home-hero-actions dashboard-home-hero-actions">
-            <Link href="/dashboard/pets/new" className="home-hero-button">
+            <Link href="/pets-create" className="home-hero-button">
               Create new pet
             </Link>
             <Link href="/dashboard" className="home-hero-button home-hero-button-secondary">
@@ -62,7 +60,7 @@ export default async function PetsPage() {
               <p className="home-section-kicker">Inventory</p>
               <h2>All assistants ({pets.length})</h2>
             </div>
-            <Link href="/dashboard/pets/new" className="home-hero-button dashboard-home-inline-button">
+            <Link href="/pets-create" className="home-hero-button dashboard-home-inline-button">
               Add new pet
             </Link>
           </div>
@@ -72,7 +70,7 @@ export default async function PetsPage() {
               <div className="dashboard-home-empty-icon" aria-hidden="true">🐾</div>
               <h3>No pets found</h3>
               <p>You haven&apos;t created any AI pets yet. Start by creating one and deploying it to your website.</p>
-              <Link href="/dashboard/pets/new" className="home-hero-button">
+              <Link href="/pets-create" className="home-hero-button">
                 Create your first pet
               </Link>
             </div>
@@ -107,16 +105,16 @@ export default async function PetsPage() {
                   </div>
 
                   <div className="dashboard-home-pet-actions">
-                    <Link href={`/dashboard/pets/${pet._id}`} className="home-hero-button dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}`} className="home-hero-button dashboard-home-action-button">
                       Settings
                     </Link>
-                    <Link href={`/dashboard/pets/${pet._id}/knowledge`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}/knowledge`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
                       Knowledge
                     </Link>
-                    <Link href={`/dashboard/pets/${pet._id}/leads`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}/leads`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
                       Leads
                     </Link>
-                    <Link href={`/dashboard/pets/${pet._id}/install`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}/install`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
                       Install
                     </Link>
                   </div>

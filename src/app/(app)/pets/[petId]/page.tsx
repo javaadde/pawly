@@ -142,8 +142,8 @@ export default function EditPetPage() {
           <p style={{ color: 'var(--text-secondary)' }}>Update your pet&apos;s settings and appearance.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link href={`/dashboard/pets/${petId}/knowledge`} className="btn-ghost" style={{ fontSize: '0.875rem' }}>🧠 Knowledge</Link>
-          <Link href={`/dashboard/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install</Link>
+          <Link href={`/pets/${petId}/knowledge`} className="btn-ghost" style={{ fontSize: '0.875rem' }}>🧠 Knowledge</Link>
+          <Link href={`/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install</Link>
         </div>
       </div>
 

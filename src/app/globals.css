@@ -3243,7 +3243,7 @@ body {
 }
 
 .sidebar.is-open {
-  width: 372px;
+  width: 280px;
   z-index: 60;
   padding: 1.5rem 1.25rem;
 }
@@ -3390,6 +3390,7 @@ body {
 .sidebar-panel-link-indicator {
   width: 0.5rem;
   height: 0.5rem;
+  margin-left: auto;
   border-radius: 50%;
   background: currentColor;
   opacity: 0;
@@ -3542,9 +3543,9 @@ body {
 }
 
 body.dashboard-sidebar-open .main-content {
-  margin-left: 388px;
-  width: calc(100vw - 388px);
-  max-width: calc(100vw - 388px);
+  margin-left: 296px;
+  width: calc(100vw - 296px);
+  max-width: calc(100vw - 296px);
   transform: translateX(12px);
 }
 

@@ -472,7 +472,7 @@
 
   function getDefaultPosition(position) {
     const margin = 20;
-    const btnSize = 76;
+    const btnSize = 92;
     const isRight = position !== 'bottom-left';
 
     return {
@@ -511,7 +511,7 @@
     const panel = root.shadowRoot.getElementById('pawly-panel');
     if (!btn || !bubble || !panel) return;
 
-    const btnSize = 76;
+    const btnSize = 92;
     const gap = 14;
     const panelWidth = Math.min(360, window.innerWidth - 24);
     const panelHeight = 520;
@@ -532,7 +532,7 @@
     panel.style.top = panelTop + 'px';
 
     const bubbleLeft = clamp(widgetPosition.left + btnSize - bubbleWidth, 12, window.innerWidth - bubbleWidth - 12);
-    const bubbleTop = clamp(widgetPosition.top - 56, 12, window.innerHeight - 60);
+    const bubbleTop = clamp(widgetPosition.top - 68, 12, window.innerHeight - 72);
     bubble.style.left = bubbleLeft + 'px';
     bubble.style.top = bubbleTop + 'px';
   }
@@ -585,7 +585,7 @@
   }
 
   function getRandomRoamTarget() {
-    const btnSize = 76;
+    const btnSize = 92;
     const minLeft = 12;
     const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 12);
     const minTop = 12;

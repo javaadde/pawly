@@ -60,8 +60,8 @@ export default async function InstallPage({ params }: { params: Promise<{ petId:
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-        <Link href={`/dashboard/pets/${petId}`} className="btn-secondary">⚙️ Edit Settings</Link>
-        <Link href={`/dashboard/pets/${petId}/leads`} className="btn-secondary">📋 View Leads</Link>
+        <Link href={`/pets/${petId}`} className="btn-secondary">⚙️ Edit Settings</Link>
+        <Link href={`/pets/${petId}/leads`} className="btn-secondary">📋 View Leads</Link>
         <Link href="/dashboard" className="btn-primary">← Back to Dashboard</Link>
       </div>
     </div>

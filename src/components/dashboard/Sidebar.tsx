@@ -7,14 +7,19 @@ import { signOut } from 'next-auth/react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'home', shortLabel: 'Home' },
-  { href: '/dashboard/pets', label: 'My Pets', icon: 'paw', shortLabel: 'Pets' },
-  { href: '/dashboard/pets/new', label: 'Create Pet', icon: 'plus', shortLabel: 'Create' },
+  { href: '/pets', label: 'My Pets', icon: 'paw', shortLabel: 'Pets' },
+  { href: '/marketplace', label: 'Marketplace', icon: 'shopping-cart', shortLabel: 'Market' },
+  { href: '/pets-create', label: 'Create Pet', icon: 'plus', shortLabel: 'Create' },
 ];
 
 const utilityItems = [{ href: '/', label: 'View Site', icon: 'globe' }];
 
 interface SidebarProps {
   user?: { name?: string | null; email?: string | null };
+}
+
+function isActivePath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function SidebarIcon({ name, className }: { name: string; className?: string }) {
@@ -61,6 +66,14 @@ function SidebarIcon({ name, className }: { name: string; className?: string }) 
           <path d="M8 12H16" />
         </svg>
       );
+    case 'shopping-cart':
+      return (
+        <svg {...props}>
+          <circle cx="8" cy="21" r="1" />
+          <circle cx="19" cy="21" r="1" />
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.56-7.43H5.12" />
+        </svg>
+      );
     case 'globe':
       return (
         <svg {...props}>
@@ -98,7 +111,7 @@ function SidebarIcon({ name, className }: { name: string; className?: string }) 
 export default function DashboardSidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [isPinnedOpen, setIsPinnedOpen] = useState(false);
-  const activeItem = navItems.find(({ href }) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href))) || navItems[0];
+  const activeItem = navItems.find(({ href }) => isActivePath(pathname, href)) || navItems[0];
   const isOpen = isPinnedOpen;
 
   useEffect(() => {
@@ -123,7 +136,7 @@ export default function DashboardSidebar({ user }: SidebarProps) {
 
       <nav className="sidebar-primary-nav" aria-label="Dashboard navigation">
         {navItems.map(({ href, label, icon, shortLabel }) => {
-          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+          const isActive = isActivePath(pathname, href);
 
           return (
             <Link key={href} href={href} className={`sidebar-primary-link ${isActive ? 'active' : ''}`} aria-label={shortLabel}>
@@ -140,15 +153,6 @@ export default function DashboardSidebar({ user }: SidebarProps) {
       <div className="sidebar-rail-spine" aria-hidden="true" />
 
       <div className={`sidebar-panel ${isOpen ? 'is-open' : ''}`}>
-        <div className="sidebar-panel-subgroup">
-          <p className="sidebar-section-label">Current focus</p>
-          <div className="sidebar-panel-highlight">
-            <span className="sidebar-panel-highlight-label">Active area</span>
-            <strong>{activeItem.label}</strong>
-            <p>Keep building with the same polished, warm brand feel as your landing page.</p>
-          </div>
-        </div>
-
         <div className="sidebar-panel-subgroup">
           <p className="sidebar-section-label">Explore</p>
           {utilityItems.map(({ href, label, icon }) => (

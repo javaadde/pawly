@@ -33,19 +33,19 @@ export default async function DashboardPage() {
     {
       title: 'Create your assistant',
       description: pets.length === 0 ? 'Start with your first pet and give it a name, tone, and personality.' : `${pets.length} pet${pets.length === 1 ? '' : 's'} already created.`,
-      href: '/dashboard/pets/new',
+      href: '/pets-create',
       cta: pets.length === 0 ? 'Create your first pet' : 'Create another pet',
     },
     {
       title: 'Train it on your content',
       description: 'Add website knowledge so replies sound grounded in your product, policies, and FAQs.',
-      href: pets[0] ? `/dashboard/pets/${pets[0]._id}/knowledge` : '/dashboard/pets/new',
+      href: pets[0] ? `/pets/${pets[0]._id}/knowledge` : '/pets-create',
       cta: pets[0] ? 'Open knowledge base' : 'Create a pet first',
     },
     {
       title: 'Install on your site',
       description: 'Drop in the script and let your Pawly assistant start helping visitors in real time.',
-      href: pets[0] ? `/dashboard/pets/${pets[0]._id}/install` : '/dashboard/pets/new',
+      href: pets[0] ? `/pets/${pets[0]._id}/install` : '/pets-create',
       cta: pets[0] ? 'View install steps' : 'Create a pet first',
     },
   ];
@@ -60,10 +60,10 @@ export default async function DashboardPage() {
             Keep the same warm, polished energy from your landing page while you build, train, and launch each assistant.
           </p>
           <div className="home-hero-actions dashboard-home-hero-actions">
-            <Link href="/dashboard/pets/new" className="home-hero-button">
+            <Link href="/pets-create" className="home-hero-button">
               Create new pet
             </Link>
-            <Link href={pets[0] ? `/dashboard/pets/${pets[0]._id}/install` : '/dashboard/pets/new'} className="home-hero-button home-hero-button-secondary">
+            <Link href={pets[0] ? `/pets/${pets[0]._id}/install` : '/pets-create'} className="home-hero-button home-hero-button-secondary">
               {pets[0] ? 'Open install guide' : 'See setup flow'}
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
               <p className="home-section-kicker">Your pets</p>
               <h2>Your assistant lineup.</h2>
             </div>
-            <Link href="/dashboard/pets/new" className="home-hero-button dashboard-home-inline-button">
+            <Link href="/pets-create" className="home-hero-button dashboard-home-inline-button">
               Create pet
             </Link>
           </div>
@@ -119,7 +119,7 @@ export default async function DashboardPage() {
               <div className="dashboard-home-empty-icon" aria-hidden="true">🐾</div>
               <h3>No pets yet</h3>
               <p>Create your first AI pet, train it on your content, and make your website feel more alive.</p>
-              <Link href="/dashboard/pets/new" className="home-hero-button">
+              <Link href="/pets-create" className="home-hero-button">
                 Create your first pet
               </Link>
             </div>
@@ -143,13 +143,13 @@ export default async function DashboardPage() {
                   <p className="dashboard-home-pet-quote">&quot;{pet.greetingMessage}&quot;</p>
 
                   <div className="dashboard-home-pet-actions">
-                    <Link href={`/dashboard/pets/${pet._id}`} className="home-hero-button dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}`} className="home-hero-button dashboard-home-action-button">
                       Edit
                     </Link>
-                    <Link href={`/dashboard/pets/${pet._id}/knowledge`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}/knowledge`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
                       Train
                     </Link>
-                    <Link href={`/dashboard/pets/${pet._id}/install`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
+                    <Link href={`/pets/${pet._id}/install`} className="home-hero-button home-hero-button-secondary dashboard-home-action-button">
                       Install
                     </Link>
                   </div>

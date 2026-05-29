@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import type { AnimatedPart, PetImages } from '@/types';
 
 const PET_TYPES = [
@@ -131,7 +130,7 @@ export default function NewPetPage() {
         setLoading(false);
         return;
       }
-      router.push(`/dashboard/pets/${data.pet._id}/knowledge`);
+      router.push(`/pets/${data.pet._id}/knowledge`);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
