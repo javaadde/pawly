@@ -132,106 +132,159 @@ export default function EditPetPage() {
     router.push('/dashboard');
   }
 
-  if (loading) return <div style={{ padding: '2.5rem', color: 'var(--text-secondary)' }}>Loading...</div>;
+  if (loading) return <div className="dashboard-settings-loading">Loading pet settings...</div>;
+
+  const activeParts = form.animatedParts?.length || 0;
+  const uploadedImages = VIEW_UPLOADS.filter(({ key }) => form.petImages?.[key]).length;
 
   return (
-    <div style={{ padding: '2.5rem', maxWidth: 700 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'white', marginBottom: '0.375rem' }}>⚙️ Edit {form.name}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Update your pet&apos;s settings and appearance.</p>
+    <div className="dashboard-home-page pet-settings-page">
+      <section className="dashboard-home-hero pet-settings-hero">
+        <div className="dashboard-home-hero-copy">
+          <p className="home-section-kicker">Pet settings</p>
+          <h1>{form.name || 'Your pet'}</h1>
+          <p>
+            Tune the assistant visitors see on your site. Keep its personality, placement, visuals, and AI behavior aligned with your brand.
+          </p>
+          <div className="home-hero-actions dashboard-home-hero-actions">
+            <Link href={`/pets/${petId}/knowledge`} className="home-hero-button home-hero-button-secondary">
+              Knowledge
+            </Link>
+            <Link href={`/pets/${petId}/install`} className="home-hero-button">
+              Install
+            </Link>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link href={`/pets/${petId}/knowledge`} className="btn-ghost" style={{ fontSize: '0.875rem' }}>🧠 Knowledge</Link>
-          <Link href={`/pets/${petId}/install`} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>📋 Install</Link>
+
+        <div className="dashboard-home-hero-panel pet-settings-summary">
+          <p className="dashboard-home-panel-label">Assistant health</p>
+          <div className="pet-settings-avatar" style={{ borderColor: `${form.brandColor || '#ff6a3d'}66`, color: form.brandColor || '#ff6a3d' }}>
+            {(form.name || '?').slice(0, 1).toUpperCase()}
+          </div>
+          <div className="dashboard-home-panel-grid">
+            <div>
+              <span>{form.isActive ?? true ? 'Live' : 'Paused'}</span>
+              <p>Website status</p>
+            </div>
+            <div>
+              <span>{uploadedImages}/3</span>
+              <p>Image views</p>
+            </div>
+            <div>
+              <span>{activeParts}</span>
+              <p>Motion parts</p>
+            </div>
+            <div>
+              <span>{form.ragEnabled ? 'AI' : 'Direct'}</span>
+              <p>Answer mode</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {error && <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>{error}</div>}
-      {success && <div className="alert alert-success" style={{ marginBottom: '1.25rem' }}>{success}</div>}
+      {error && <div className="alert alert-error pet-settings-alert">{error}</div>}
+      {success && <div className="alert alert-success pet-settings-alert">{success}</div>}
 
-      <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div className="card">
-          <h2 style={{ fontWeight: 700, color: 'white', marginBottom: '1.25rem', fontSize: '1rem' }}>Basic settings</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <form onSubmit={save} className="pet-settings-form">
+        <section className="dashboard-home-section-shell pet-settings-section">
+          <div className="dashboard-home-section-header pet-settings-section-header">
+            <div>
+              <p className="dashboard-home-panel-label">Identity</p>
+              <h2>Basic settings</h2>
+            </div>
+            <span className={`dashboard-home-status ${form.isActive ?? true ? 'is-active' : ''}`}>
+              {form.isActive ?? true ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+
+          <div className="pet-settings-fields">
             <div className="field">
               <label className="label" htmlFor="edit-name">Pet name</label>
               <input id="edit-name" className="input" value={form.name || ''} onChange={(e) => set('name', e.target.value)} required />
             </div>
             <div className="field">
               <label className="label" htmlFor="edit-greeting">Greeting message</label>
-              <textarea id="edit-greeting" className="input" rows={3} value={form.greetingMessage || ''} onChange={(e) => set('greetingMessage', e.target.value)} style={{ resize: 'vertical' }} />
+              <textarea id="edit-greeting" className="input pet-settings-textarea" rows={4} value={form.greetingMessage || ''} onChange={(e) => set('greetingMessage', e.target.value)} />
             </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <div className="field" style={{ flex: 1 }}>
+
+            <div className="pet-settings-two-column">
+              <div className="field">
                 <label className="label" htmlFor="edit-pet-type">Pet type</label>
-                <select id="edit-pet-type" className="input" value={form.petType || 'cat'} onChange={(e) => set('petType', e.target.value)} style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <select id="edit-pet-type" className="input" value={form.petType || 'cat'} onChange={(e) => set('petType', e.target.value)}>
                   <option value="cat">Cat</option>
                   <option value="dog">Dog</option>
                   <option value="bunny">Bunny</option>
                   <option value="robot">Robot</option>
                 </select>
               </div>
-              <div className="field" style={{ flex: 1 }}>
+              <div className="field">
                 <label className="label" htmlFor="edit-color">Brand color</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="pet-settings-color-row">
                   <input type="color" id="edit-color" value={form.brandColor || '#7C3AED'} onChange={(e) => set('brandColor', e.target.value)} />
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{form.brandColor}</span>
+                  <span>{form.brandColor}</span>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <div className="field" style={{ flex: 1 }}>
+
+            <div className="pet-settings-two-column">
+              <div className="field">
                 <label className="label" htmlFor="edit-personality">Personality</label>
-                <select id="edit-personality" className="input" value={form.personality || 'friendly'} onChange={(e) => set('personality', e.target.value)} style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <select id="edit-personality" className="input" value={form.personality || 'friendly'} onChange={(e) => set('personality', e.target.value)}>
                   <option value="friendly">Friendly</option>
                   <option value="professional">Professional</option>
                   <option value="funny">Funny</option>
                   <option value="calm">Calm</option>
                 </select>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <div className="field" style={{ flex: 1 }}>
+              <div className="field">
                 <label className="label" htmlFor="edit-position">Position</label>
-                <select id="edit-position" className="input" value={form.position || 'bottom-right'} onChange={(e) => set('position', e.target.value)} style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <select id="edit-position" className="input" value={form.position || 'bottom-right'} onChange={(e) => set('position', e.target.value)}>
                   <option value="bottom-right">Bottom Right</option>
                   <option value="bottom-left">Bottom Left</option>
                 </select>
               </div>
-              <div className="field" style={{ flex: 1 }}>
+            </div>
+
+            <div className="pet-settings-two-column">
+              <div className="field">
                 <label className="label" htmlFor="edit-domain">Allowed domain</label>
                 <input id="edit-domain" className="input" placeholder="example.com (leave blank for any)" value={form.allowedDomain || ''} onChange={(e) => set('allowedDomain', e.target.value)} />
               </div>
+              <label className="pet-settings-toggle" htmlFor="edit-active">
+                <input type="checkbox" id="edit-active" checked={form.isActive ?? true} onChange={(e) => set('isActive', e.target.checked)} />
+                <span>
+                  <strong>Visible on website</strong>
+                  <small>Show this pet to visitors when the script is installed.</small>
+                </span>
+              </label>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <input type="checkbox" id="edit-active" checked={form.isActive ?? true} onChange={(e) => set('isActive', e.target.checked)} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--purple-600)' }} />
-              <label htmlFor="edit-active" style={{ color: 'white', fontSize: '0.9rem', cursor: 'pointer' }}>Pet is active (visible on website)</label>
+          </div>
+        </section>
+
+        <section className="dashboard-home-section-shell pet-settings-section">
+          <div className="dashboard-home-section-header pet-settings-section-header">
+            <div>
+              <p className="dashboard-home-panel-label">Appearance</p>
+              <h2>Images and motion</h2>
             </div>
+          </div>
+
+          <div className="pet-settings-fields">
             <div className="field">
               <label className="label">Pet images</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              <div className="pet-settings-image-grid">
                 {VIEW_UPLOADS.map(({ key, label }) => (
                   <label
                     key={key}
                     htmlFor={`edit-pet-image-${key}`}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.75rem',
-                      padding: '0.875rem',
-                      borderRadius: '0.875rem',
-                      border: `1px solid ${form.petImages?.[key] ? 'rgba(168,85,247,0.45)' : 'var(--dark-border)'}`,
-                      background: 'rgba(255,255,255,0.02)',
-                      cursor: 'pointer',
-                    }}
+                    className={`pet-settings-image-card ${form.petImages?.[key] ? 'has-image' : ''}`}
                   >
-                    <p style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>{label}</p>
-                    <div style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: '0.75rem', overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <p>{label}</p>
+                    <div className="pet-settings-image-preview">
                       {form.petImages?.[key] ? (
                         <Image src={form.petImages[key]} alt={`${label} preview`} fill unoptimized style={{ objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '0.75rem' }}>
+                        <span>
                           {uploadingView === key ? 'Uploading...' : 'Click to upload'}
                         </span>
                       )}
@@ -249,7 +302,7 @@ export default function EditPetPage() {
             </div>
             <div className="field">
               <label className="label">Animated body parts</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.625rem' }}>
+              <div className="pet-settings-choice-grid">
                 {ANIMATION_OPTIONS.map(({ value, label, desc }) => {
                   const selected = form.animatedParts?.includes(value) ?? false;
 
@@ -258,47 +311,46 @@ export default function EditPetPage() {
                       key={value}
                       type="button"
                       onClick={() => toggleAnimatedPart(value)}
-                      style={{
-                        padding: '0.875rem 1rem',
-                        borderRadius: '0.75rem',
-                        border: `2px solid ${selected ? 'var(--purple-500)' : 'var(--dark-border)'}`,
-                        background: selected ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
+                      className={`pet-settings-choice ${selected ? 'is-selected' : ''}`}
                     >
-                      <p style={{ color: selected ? 'var(--purple-400)' : 'white', fontWeight: 600, fontSize: '0.875rem' }}>{label}</p>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>{desc}</p>
+                      <strong>{label}</strong>
+                      <span>{desc}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="card">
-          <h2 style={{ fontWeight: 700, color: 'white', marginBottom: '1.25rem', fontSize: '1rem' }}>RAG settings</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <section className="dashboard-home-section-shell pet-settings-section">
+          <div className="dashboard-home-section-header pet-settings-section-header">
+            <div>
+              <p className="dashboard-home-panel-label">Intelligence</p>
+              <h2>RAG settings</h2>
+            </div>
+          </div>
+
+          <div className="pet-settings-fields">
+            <label className="pet-settings-toggle" htmlFor="edit-rag-enabled">
               <input
                 type="checkbox"
                 id="edit-rag-enabled"
                 checked={form.ragEnabled ?? false}
                 onChange={(e) => set('ragEnabled', e.target.checked)}
-                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--purple-600)' }}
               />
-              <label htmlFor="edit-rag-enabled" style={{ color: 'white', fontSize: '0.9rem', cursor: 'pointer' }}>
-                Enable RAG mode for this pet
-              </label>
-            </div>
+              <span>
+                <strong>Enable RAG mode</strong>
+                <small>Use your provider key and model to answer from saved knowledge context.</small>
+              </span>
+            </label>
 
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+            <p className="pet-settings-note">
               When disabled, Pawly answers by matching the visitor question against the saved knowledge directly. When enabled, it uses your API key and model to answer with AI from that knowledge context.
             </p>
 
             {form.ragEnabled ? (
-              <>
+              <div className="pet-settings-two-column">
                 <div className="field">
                   <label className="label" htmlFor="edit-rag-api-key">RAG API key</label>
                   <input
@@ -320,21 +372,18 @@ export default function EditPetPage() {
                     value={form.ragModel || 'openai/gpt-4o-mini'}
                     onChange={(e) => set('ragModel', e.target.value)}
                   />
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
-                    Use a model supported by your provider. This is only used when RAG mode is enabled.
-                  </p>
                 </div>
-              </>
+              </div>
             ) : null}
           </div>
-        </div>
+        </section>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button type="button" onClick={deletePet} disabled={deleting} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '0.625rem', padding: '0.625rem 1.25rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }} id="delete-pet-btn">
-            {deleting ? 'Deleting...' : '🗑️ Delete Pet'}
+        <div className="pet-settings-actions">
+          <button type="button" onClick={deletePet} disabled={deleting} className="pet-settings-delete-button" id="delete-pet-btn">
+            {deleting ? 'Deleting...' : 'Delete pet'}
           </button>
-          <button type="submit" className="btn-primary" disabled={saving} style={{ opacity: saving ? 0.7 : 1 }} id="save-pet-btn">
-            {saving ? 'Saving...' : '💾 Save Settings'}
+          <button type="submit" className="home-hero-button" disabled={saving} id="save-pet-btn">
+            {saving ? 'Saving...' : 'Save settings'}
           </button>
         </div>
       </form>

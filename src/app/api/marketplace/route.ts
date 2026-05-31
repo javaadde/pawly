@@ -15,9 +15,22 @@ export async function GET(req: Request) {
   await connectDB();
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type');
+  const query = searchParams.get('q');
 
-  const petsQuery = type && type !== 'all' && isMarketplacePetType(type) ? MarketplacePet.find({ petType: type }) : MarketplacePet.find();
-  const pets = await petsQuery.sort({ isPopular: -1, createdAt: -1 });
+  let filter: any = {};
+  
+  if (type && type !== 'all' && isMarketplacePetType(type)) {
+    filter.petType = type;
+  }
+  
+  if (query) {
+    filter.$or = [
+      { name: { $regex: query, $options: 'i' } },
+      { description: { $regex: query, $options: 'i' } }
+    ];
+  }
+
+  const pets = await MarketplacePet.find(filter).sort({ isPopular: -1, createdAt: -1 });
   return NextResponse.json({ pets });
 }
 
